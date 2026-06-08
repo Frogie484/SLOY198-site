@@ -7,40 +7,40 @@ export const BOOKING_STATUSES = ["new", "confirmed", "cancelled", "completed"];
 export const SLOT_STATUSES = ["free", "booked", "unavailable", "cancelled"];
 
 const emptyDatabase = {
-  version: 1,
+  version: 2,
   slots: [],
   bookings: []
 };
 
 export class ScheduleStore {
-  constructor(filePath) {
-    this.filePath = filePath;
+  constructor(source) {
+    this.adapter = typeof source === "string" ? new JsonFileAdapter(source) : source;
     this.mutationQueue = Promise.resolve();
   }
 
   async init() {
-    await mkdir(dirname(this.filePath), { recursive: true });
-    try {
-      const database = JSON.parse(await readFile(this.filePath, "utf8"));
-      normalizeDatabase(database);
-      await this.write(database);
-    } catch {
-      await this.write(emptyDatabase);
-    }
+    await this.adapter.init?.(cloneEmptyDatabase(), normalizeDatabase);
   }
 
   async read() {
-    const content = await readFile(this.filePath, "utf8");
-    return JSON.parse(content);
+    const database = await this.adapter.read();
+    normalizeDatabase(database);
+    return database;
   }
 
   async write(database) {
-    const temporaryPath = `${this.filePath}.tmp`;
-    await writeFile(temporaryPath, `${JSON.stringify(database, null, 2)}\n`, "utf8");
-    await rename(temporaryPath, this.filePath);
+    normalizeDatabase(database);
+    await this.adapter.write(database);
   }
 
   mutate(operation) {
+    if (typeof this.adapter.mutate === "function") {
+      return this.adapter.mutate(async (database) => {
+        normalizeDatabase(database);
+        return operation(database);
+      }, cloneEmptyDatabase);
+    }
+
     const mutation = this.mutationQueue.then(async () => {
       const database = await this.read();
       const result = await operation(database);
@@ -253,6 +253,34 @@ export class ScheduleStore {
   }
 }
 
+class JsonFileAdapter {
+  constructor(filePath) {
+    this.filePath = filePath;
+  }
+
+  async init(empty, normalize) {
+    await mkdir(dirname(this.filePath), { recursive: true });
+    try {
+      const database = JSON.parse(await readFile(this.filePath, "utf8"));
+      normalize(database);
+      await this.write(database);
+    } catch {
+      await this.write(empty);
+    }
+  }
+
+  async read() {
+    const content = await readFile(this.filePath, "utf8");
+    return JSON.parse(content);
+  }
+
+  async write(database) {
+    const temporaryPath = `${this.filePath}.tmp`;
+    await writeFile(temporaryPath, `${JSON.stringify(database, null, 2)}\n`, "utf8");
+    await rename(temporaryPath, this.filePath);
+  }
+}
+
 const compareSlots = (left, right) =>
   `${left.date}T${left.time}`.localeCompare(`${right.date}T${right.time}`);
 
@@ -306,6 +334,8 @@ const normalizeDatabase = (database) => {
     deactivateOverlappingSlots(database, bookedSlot, bookedSlot.bookingId);
   });
 };
+
+const cloneEmptyDatabase = () => structuredClone(emptyDatabase);
 
 export const createStoreError = (message, statusCode = 400) => {
   const error = new Error(message);

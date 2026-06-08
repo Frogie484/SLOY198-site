@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/api/admin/slots/:id",
+      "destination": "/api/admin/slot?id=:id"
+    },
+    {
+      "source": "/api/admin/bookings/:id",
+      "destination": "/api/admin/booking?id=:id"
+    }
+  ]
+}
