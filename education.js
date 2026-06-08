@@ -27,16 +27,20 @@ const createElement = (tagName, className, text = "") => {
 };
 
 const createLesson = (lesson, course) => {
-  const item = createElement("li", "course-lesson");
-  const number = createElement("span", "course-lesson__number", String(lesson.order).padStart(2, "0"));
-  const copy = createElement("div", "course-lesson__copy");
+  const item = createElement("li", "education-course__lesson");
+  const number = createElement(
+    "span",
+    "education-course__lesson-number",
+    String(lesson.order).padStart(2, "0")
+  );
+  const copy = createElement("div", "education-course__lesson-copy");
   copy.append(
     createElement("strong", "", lesson.title),
     createElement("p", "", lesson.description || "Описание урока скоро появится.")
   );
   const action = createElement(
     "button",
-    "course-lesson__action",
+    "education-course__lesson-action",
     course.hasAccess ? (lesson.videoAvailable ? "Смотреть" : "Видео готовится") : "Закрыто"
   );
   action.type = "button";
@@ -51,38 +55,43 @@ const createLesson = (lesson, course) => {
 };
 
 const createCourseCard = (course, index, testAccessEnabled) => {
-  const article = createElement("article", "course-card reveal");
-  const preview = createElement("div", "course-card__preview");
-  if (course.previewImageUrl) {
-    preview.style.backgroundImage =
-      `linear-gradient(180deg, rgba(5, 19, 27, 0.08), rgba(5, 19, 27, 0.84)), url("${course.previewImageUrl}")`;
-  }
-  preview.append(
-    createElement("span", "course-card__index", String(index + 1).padStart(2, "0")),
-    createElement("span", "course-card__access", course.hasAccess ? "Доступ открыт" : "Видеокурс")
-  );
-
-  const content = createElement("div", "course-card__content");
-  const head = createElement("div", "course-card__head");
+  const article = createElement("article", "education-course");
+  const head = createElement("div", "education-course__head");
   const heading = createElement("div", "");
   heading.append(
-    createElement("p", "course-card__label", "Самостоятельный формат"),
-    createElement("h2", "", course.title)
+    createElement("span", "education-course__index", String(index + 1).padStart(2, "0")),
+    createElement("h3", "", course.title)
   );
-  head.append(heading, createElement("strong", "course-card__price", formatPrice(course.price)));
-  content.append(head, createElement("p", "course-card__description", course.description));
+  const meta = createElement("div", "education-course__meta");
+  meta.append(
+    createElement(
+      "span",
+      "education-course__access",
+      course.hasAccess ? "Доступ открыт" : "Видеокурс"
+    ),
+    createElement("strong", "education-course__price", formatPrice(course.price))
+  );
+  head.append(heading, meta);
+  article.append(
+    head,
+    createElement(
+      "p",
+      "education-course__description",
+      course.description || "Описание курса скоро появится."
+    )
+  );
 
   const lessonsTitle = createElement(
     "p",
-    "course-card__lessons-title",
+    "education-course__lessons-title",
     `Уроки · ${course.lessons.length}`
   );
-  const lessons = createElement("ol", "course-lessons");
+  const lessons = createElement("ol", "education-course__lessons");
   course.lessons.forEach((lesson) => lessons.append(createLesson(lesson, course)));
-  content.append(lessonsTitle, lessons);
+  article.append(lessonsTitle, lessons);
 
   if (!course.hasAccess && testAccessEnabled) {
-    const access = createElement("div", "course-card__access-actions");
+    const access = createElement("div", "education-course__access-actions");
     const testButton = createElement("button", "button", "Получить тестовый доступ");
     testButton.type = "button";
     testButton.dataset.testAccess = course.id;
@@ -90,16 +99,15 @@ const createCourseCard = (course, index, testAccessEnabled) => {
       testButton,
       createElement("small", "", "Режим разработки до подключения ЮKassa")
     );
-    content.append(access);
+    article.append(access);
   }
 
-  article.append(preview, content);
   return article;
 };
 
 const renderCatalog = ({ userId, courses, testAccessEnabled }) => {
   userIdElement.textContent = userId;
-  identityElement.hidden = false;
+  identityElement.hidden = !testAccessEnabled;
   catalogElement.replaceChildren();
   if (courses.length === 0) {
     catalogElement.append(
@@ -117,7 +125,11 @@ const loadCatalog = async () => {
     renderCatalog(await educationApi.getEducationCatalog());
   } catch (error) {
     catalogElement.replaceChildren(
-      createElement("p", "education-state education-state--error", error.message)
+      createElement(
+        "p",
+        "education-state",
+        "Видеокурсы временно недоступны. Попробуйте обновить страницу позже."
+      )
     );
   }
 };
@@ -132,7 +144,7 @@ catalogElement.addEventListener("click", async (event) => {
       await loadCatalog();
     } catch (error) {
       accessButton.disabled = false;
-      accessButton.textContent = error.message;
+      accessButton.textContent = "Не удалось открыть доступ";
     }
     return;
   }

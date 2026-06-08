@@ -124,7 +124,15 @@
       "updatedAt": "2026-06-07T15:50:20.633Z"
     }
   ],
-  "users": [],
+  "users": [
+    {
+      "id": "9392d17f-05e0-4047-87ee-0d06991352eb",
+      "name": "",
+      "email": "",
+      "createdAt": "2026-06-08T19:36:51.413Z",
+      "updatedAt": "2026-06-08T19:36:51.413Z"
+    }
+  ],
   "purchases": [],
   "courses": [],
   "lessons": []
