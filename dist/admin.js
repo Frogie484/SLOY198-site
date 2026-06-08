@@ -6,6 +6,15 @@ const loginMessage = document.querySelector("[data-login-message]");
 const slotForm = document.querySelector("[data-slot-form]");
 const slotMessage = document.querySelector("[data-slot-message]");
 const scheduleList = document.querySelector("[data-schedule-list]");
+const courseForm = document.querySelector("[data-course-form]");
+const courseMessage = document.querySelector("[data-course-message]");
+const courseFormTitle = document.querySelector("[data-course-form-title]");
+const courseCancelButton = document.querySelector("[data-course-cancel]");
+const accessForm = document.querySelector("[data-access-form]");
+const accessMessage = document.querySelector("[data-access-message]");
+const accessCourseSelect = document.querySelector("[data-access-course]");
+const adminCourses = document.querySelector("[data-admin-courses]");
+let educationCourses = [];
 const statusLabels = {
   new: "Новая",
   confirmed: "Подтверждена",
@@ -61,6 +70,30 @@ const createActionButton = (label, action, id, variant = "") => {
   button.dataset.action = action;
   button.dataset.id = id;
   return button;
+};
+
+const createAdminField = (labelText, name, value = "", options = {}) => {
+  const label = document.createElement("label");
+  if (options.wide) {
+    label.className = "admin-field--wide";
+  }
+  const labelValue = document.createElement("span");
+  labelValue.textContent = labelText;
+  const field = options.textarea
+    ? document.createElement("textarea")
+    : document.createElement("input");
+  field.name = name;
+  field.value = value || "";
+  if (options.textarea) {
+    field.rows = options.rows || 3;
+  } else {
+    field.type = options.type || "text";
+  }
+  if (options.required) {
+    field.required = true;
+  }
+  label.append(labelValue, field);
+  return label;
 };
 
 const renderSchedule = (slots) => {
@@ -168,6 +201,174 @@ async function loadSchedule() {
   }
 }
 
+const resetCourseForm = () => {
+  courseForm.reset();
+  courseForm.elements.courseId.value = "";
+  courseForm.elements.price.value = "0";
+  courseForm.elements.status.value = "draft";
+  courseFormTitle.textContent = "Создать курс";
+  courseCancelButton.hidden = true;
+};
+
+const renderAccessCourses = () => {
+  accessCourseSelect.replaceChildren();
+  if (educationCourses.length === 0) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Сначала создайте курс";
+    accessCourseSelect.append(option);
+    return;
+  }
+  educationCourses.forEach((course) => {
+    const option = document.createElement("option");
+    option.value = course.id;
+    option.textContent = course.title;
+    accessCourseSelect.append(option);
+  });
+};
+
+const renderLesson = (lesson) => {
+  const card = document.createElement("article");
+  card.className = "admin-lesson";
+  card.dataset.lessonId = lesson.id;
+
+  const head = document.createElement("div");
+  head.className = "admin-lesson__head";
+  const order = document.createElement("strong");
+  order.textContent = String(lesson.order).padStart(2, "0");
+  const status = document.createElement("span");
+  status.className = `admin-education-badge ${lesson.published ? "is-published" : ""}`;
+  status.textContent = lesson.published ? "Опубликован" : "Скрыт";
+  const video = document.createElement("span");
+  video.className = `admin-education-badge ${lesson.videoPath ? "has-video" : ""}`;
+  video.textContent = lesson.videoPath ? "Видео загружено" : "Без видео";
+  head.append(order, status, video);
+
+  const form = document.createElement("form");
+  form.className = "lesson-edit-form";
+  form.dataset.lessonForm = lesson.id;
+  form.append(
+    createAdminField("Название урока", "title", lesson.title, { required: true }),
+    createAdminField("Описание", "description", lesson.description, {
+      textarea: true,
+      wide: true
+    })
+  );
+  const save = document.createElement("button");
+  save.type = "submit";
+  save.className = "admin-button";
+  save.textContent = "Сохранить";
+  form.append(save);
+
+  const upload = document.createElement("div");
+  upload.className = "admin-video-upload";
+  const file = document.createElement("input");
+  file.type = "file";
+  file.accept = "video/mp4,video/webm,video/quicktime,.mov";
+  file.dataset.videoFile = lesson.id;
+  const uploadButton = createActionButton(
+    lesson.videoPath ? "Заменить видео" : "Загрузить видео",
+    "upload-video",
+    lesson.id
+  );
+  upload.append(file, uploadButton);
+
+  const actions = document.createElement("div");
+  actions.className = "admin-education-actions";
+  actions.append(
+    createActionButton("Выше", "lesson-up", lesson.id),
+    createActionButton("Ниже", "lesson-down", lesson.id),
+    createActionButton(
+      lesson.published ? "Скрыть" : "Опубликовать",
+      "lesson-toggle",
+      lesson.id
+    ),
+    createActionButton("Удалить", "lesson-delete", lesson.id, "admin-button--danger")
+  );
+  card.append(head, form, upload, actions);
+  return card;
+};
+
+const renderCourse = (course) => {
+  const card = document.createElement("article");
+  card.className = "admin-course";
+  card.dataset.courseId = course.id;
+
+  const head = document.createElement("div");
+  head.className = "admin-course__head";
+  const copy = document.createElement("div");
+  const kicker = document.createElement("p");
+  kicker.className = "admin-kicker";
+  kicker.textContent = course.status === "published" ? "Опубликован" : "Черновик";
+  const title = document.createElement("h3");
+  title.textContent = course.title;
+  const description = document.createElement("p");
+  description.textContent = course.description || "Описание пока не добавлено.";
+  copy.append(kicker, title, description);
+  const actions = document.createElement("div");
+  actions.className = "admin-education-actions";
+  actions.append(
+    createActionButton("Редактировать", "course-edit", course.id),
+    createActionButton("Удалить курс", "course-delete", course.id, "admin-button--danger")
+  );
+  head.append(copy, actions);
+
+  const lessons = document.createElement("div");
+  lessons.className = "admin-lessons";
+  if (course.lessons.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "admin-empty";
+    empty.textContent = "Уроков пока нет.";
+    lessons.append(empty);
+  } else {
+    course.lessons.forEach((lesson) => lessons.append(renderLesson(lesson)));
+  }
+
+  const lessonForm = document.createElement("form");
+  lessonForm.className = "lesson-create-form";
+  lessonForm.dataset.lessonCreate = course.id;
+  lessonForm.append(
+    createAdminField("Новый урок", "title", "", { required: true }),
+    createAdminField("Описание", "description", "", { textarea: true, wide: true })
+  );
+  const add = document.createElement("button");
+  add.className = "admin-button admin-button--primary";
+  add.type = "submit";
+  add.textContent = "Добавить урок";
+  lessonForm.append(add);
+
+  card.append(head, lessons, lessonForm);
+  return card;
+};
+
+const renderEducation = () => {
+  adminCourses.replaceChildren();
+  renderAccessCourses();
+  if (educationCourses.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "admin-empty";
+    empty.textContent = "Курсов пока нет. Создайте первый курс.";
+    adminCourses.append(empty);
+    return;
+  }
+  educationCourses.forEach((course) => adminCourses.append(renderCourse(course)));
+};
+
+async function loadEducation() {
+  adminCourses.innerHTML = '<p class="admin-empty">Загрузка курсов...</p>';
+  try {
+    const data = await api.getAdminCourses();
+    educationCourses = data.courses;
+    renderEducation();
+  } catch (error) {
+    if (error.status === 401) {
+      showLogin();
+      return;
+    }
+    adminCourses.innerHTML = `<p class="admin-empty">${error.message}</p>`;
+  }
+}
+
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   setMessage(loginMessage, "Проверяем данные...");
@@ -227,6 +428,164 @@ scheduleList.addEventListener("click", async (event) => {
 });
 
 document.querySelector("[data-refresh]").addEventListener("click", loadSchedule);
+document.querySelector("[data-education-refresh]").addEventListener("click", loadEducation);
+document.querySelectorAll("[data-admin-tab]").forEach((tab) => {
+  tab.addEventListener("click", async () => {
+    document.querySelectorAll("[data-admin-tab]").forEach((item) => {
+      item.classList.toggle("is-active", item === tab);
+    });
+    document.querySelectorAll("[data-admin-view]").forEach((view) => {
+      view.hidden = view.dataset.adminView !== tab.dataset.adminTab;
+    });
+    if (tab.dataset.adminTab === "education") {
+      await loadEducation();
+    }
+  });
+});
+
+courseForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(courseForm);
+  const payload = {
+    title: data.get("title"),
+    description: data.get("description"),
+    previewImageUrl: data.get("previewImageUrl"),
+    price: Number(data.get("price")),
+    status: data.get("status")
+  };
+  setMessage(courseMessage, "Сохраняем курс...");
+  try {
+    if (data.get("courseId")) {
+      await api.updateCourse(data.get("courseId"), payload);
+    } else {
+      await api.createCourse(payload);
+    }
+    resetCourseForm();
+    setMessage(courseMessage, "Курс сохранён.");
+    await loadEducation();
+  } catch (error) {
+    setMessage(courseMessage, error.message, true);
+  }
+});
+
+courseCancelButton.addEventListener("click", resetCourseForm);
+
+accessForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(accessForm);
+  setMessage(accessMessage, "Выдаём доступ...");
+  try {
+    await api.grantCourseAccess(data.get("userId"), data.get("courseId"));
+    setMessage(accessMessage, "Тестовый доступ выдан.");
+    accessForm.elements.userId.value = "";
+  } catch (error) {
+    setMessage(accessMessage, error.message, true);
+  }
+});
+
+adminCourses.addEventListener("submit", async (event) => {
+  const createForm = event.target.closest("[data-lesson-create]");
+  const editForm = event.target.closest("[data-lesson-form]");
+  if (!createForm && !editForm) {
+    return;
+  }
+  event.preventDefault();
+  const data = new FormData(event.target);
+  const button = event.target.querySelector('[type="submit"]');
+  button.disabled = true;
+  try {
+    if (createForm) {
+      await api.createLesson({
+        courseId: createForm.dataset.lessonCreate,
+        title: data.get("title"),
+        description: data.get("description"),
+        published: false
+      });
+    } else {
+      await api.updateLesson(editForm.dataset.lessonForm, {
+        title: data.get("title"),
+        description: data.get("description")
+      });
+    }
+    await loadEducation();
+  } catch (error) {
+    setMessage(courseMessage, error.message, true);
+    button.disabled = false;
+  }
+});
+
+adminCourses.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-action]");
+  if (!button) {
+    return;
+  }
+  const course = educationCourses.find((item) => item.id === button.dataset.id);
+  const lesson = educationCourses.flatMap((item) => item.lessons)
+    .find((item) => item.id === button.dataset.id);
+
+  if (button.dataset.action === "course-edit" && course) {
+    courseForm.elements.courseId.value = course.id;
+    courseForm.elements.title.value = course.title;
+    courseForm.elements.description.value = course.description;
+    courseForm.elements.previewImageUrl.value = course.previewImageUrl;
+    courseForm.elements.price.value = course.price;
+    courseForm.elements.status.value = course.status;
+    courseFormTitle.textContent = "Редактировать курс";
+    courseCancelButton.hidden = false;
+    courseForm.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  if (
+    (button.dataset.action === "course-delete" || button.dataset.action === "lesson-delete") &&
+    !window.confirm("Удалить выбранный материал без возможности восстановления?")
+  ) {
+    return;
+  }
+
+  button.disabled = true;
+  try {
+    if (button.dataset.action === "course-delete") {
+      await api.deleteCourse(button.dataset.id);
+    } else if (button.dataset.action === "lesson-delete") {
+      await api.deleteLesson(button.dataset.id);
+    } else if (button.dataset.action === "lesson-up") {
+      await api.moveLesson(button.dataset.id, "up");
+    } else if (button.dataset.action === "lesson-down") {
+      await api.moveLesson(button.dataset.id, "down");
+    } else if (button.dataset.action === "lesson-toggle" && lesson) {
+      await api.updateLesson(lesson.id, { published: !lesson.published });
+    } else if (button.dataset.action === "upload-video") {
+      const fileInput = adminCourses.querySelector(`[data-video-file="${button.dataset.id}"]`);
+      const file = fileInput?.files?.[0];
+      if (!file) {
+        throw new Error("Сначала выберите видеофайл.");
+      }
+      button.textContent = "Подготавливаем загрузку...";
+      const upload = await api.requestVideoUpload({
+        lessonId: button.dataset.id,
+        fileName: file.name,
+        contentType: file.type,
+        size: file.size
+      });
+      button.textContent = "Загружаем видео...";
+      const uploadResponse = await fetch(upload.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": upload.contentType },
+        body: file
+      });
+      if (!uploadResponse.ok) {
+        throw new Error("Не удалось загрузить видео в Vercel Blob.");
+      }
+      await api.updateLesson(button.dataset.id, { videoPath: upload.videoPath });
+    }
+    await loadEducation();
+  } catch (error) {
+    setMessage(courseMessage, error.message, true);
+    button.disabled = false;
+  }
+});
+
 document.querySelector("[data-logout]").addEventListener("click", async () => {
   await api.logout();
   showLogin();

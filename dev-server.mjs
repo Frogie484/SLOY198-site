@@ -5,6 +5,20 @@ import { randomUUID, timingSafeEqual } from "node:crypto";
 import { networkInterfaces } from "node:os";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { ScheduleStore } from "./schedule-store.mjs";
+import {
+  createPrivateVideoPlayback,
+  createPrivateVideoUpload,
+  deletePrivateVideos
+} from "./server/vercel/education-media.js";
+import {
+  ensureEducationIdentity,
+  getEducationUser
+} from "./server/vercel/education-session.js";
+import {
+  validateCourse,
+  validateLesson
+} from "./server/vercel/education-validation.js";
+import { isPublicTestAccessEnabled } from "./server/vercel/education-access.js";
 
 const args = process.argv.slice(2);
 const getArg = (name, fallback) => {
@@ -173,6 +187,48 @@ const handleApiRequest = async (request, response, pathname) => {
     return true;
   }
 
+  if (request.method === "GET" && pathname === "/api/education/catalog") {
+    const identity = ensureEducationIdentity(request);
+    await store.ensureEducationUser(identity.user.id);
+    sendJson(response, 200, {
+      userId: identity.user.id,
+      courses: await store.listEducationCatalog(identity.user.id),
+      testAccessEnabled: isPublicTestAccessEnabled()
+    }, identity.cookie ? { "Set-Cookie": identity.cookie } : {});
+    return true;
+  }
+
+  if (request.method === "POST" && pathname === "/api/education/test-access") {
+    if (!isPublicTestAccessEnabled()) {
+      sendJson(response, 403, { error: "Тестовый доступ отключён." });
+      return true;
+    }
+    const identity = ensureEducationIdentity(request);
+    const body = await readJsonBody(request);
+    await store.ensureEducationUser(identity.user.id);
+    const purchase = await store.grantCourseAccess(
+      identity.user.id,
+      String(body.courseId || "").trim(),
+      "test"
+    );
+    sendJson(response, 200, { purchase }, identity.cookie
+      ? { "Set-Cookie": identity.cookie }
+      : {});
+    return true;
+  }
+
+  if (request.method === "GET" && pathname === "/api/education/video") {
+    const user = getEducationUser(request);
+    if (!user) {
+      sendJson(response, 401, { error: "Требуется доступ к курсу." });
+      return true;
+    }
+    const lessonId = new URL(request.url || "/", "http://localhost").searchParams.get("id");
+    const lesson = await store.getLessonWithAccess(user.id, lessonId);
+    sendJson(response, 200, await createPrivateVideoPlayback(lesson.videoPath));
+    return true;
+  }
+
   if (request.method === "POST" && pathname === "/api/admin/login") {
     const body = await readJsonBody(request);
     const credentialsAreValid =
@@ -222,6 +278,97 @@ const handleApiRequest = async (request, response, pathname) => {
   if (request.method === "POST" && pathname === "/api/admin/slots") {
     const slot = await store.createSlot(validateSlot(await readJsonBody(request)));
     sendJson(response, 201, { slot });
+    return true;
+  }
+
+  if (request.method === "GET" && pathname === "/api/admin/courses") {
+    sendJson(response, 200, { courses: await store.listAdminCourses() });
+    return true;
+  }
+
+  if (request.method === "POST" && pathname === "/api/admin/courses") {
+    const course = await store.createCourse(validateCourse(await readJsonBody(request)));
+    sendJson(response, 201, { course });
+    return true;
+  }
+
+  const courseMatch = pathname.match(/^\/api\/admin\/courses\/([^/]+)$/);
+  if (request.method === "PATCH" && courseMatch) {
+    const course = await store.updateCourse(
+      courseMatch[1],
+      validateCourse(await readJsonBody(request), true)
+    );
+    sendJson(response, 200, { course });
+    return true;
+  }
+  if (request.method === "DELETE" && courseMatch) {
+    const deleted = await store.deleteCourse(courseMatch[1]);
+    await deletePrivateVideos(deleted.videoPaths);
+    sendJson(response, 200, deleted);
+    return true;
+  }
+
+  if (request.method === "POST" && pathname === "/api/admin/lessons") {
+    const lesson = await store.createLesson(validateLesson(await readJsonBody(request)));
+    sendJson(response, 201, { lesson });
+    return true;
+  }
+
+  const lessonMatch = pathname.match(/^\/api\/admin\/lessons\/([^/]+)$/);
+  if (request.method === "PATCH" && lessonMatch) {
+    const body = await readJsonBody(request);
+    if (body.direction) {
+      const lesson = await store.moveLesson(lessonMatch[1], body.direction);
+      sendJson(response, 200, { lesson });
+      return true;
+    }
+    const courses = await store.listAdminCourses();
+    const previous = courses.flatMap((course) => course.lessons)
+      .find((lesson) => lesson.id === lessonMatch[1]);
+    const lesson = await store.updateLesson(
+      lessonMatch[1],
+      validateLesson(body, true)
+    );
+    if (
+      previous?.videoPath &&
+      body.videoPath !== undefined &&
+      previous.videoPath !== lesson.videoPath
+    ) {
+      await deletePrivateVideos(previous.videoPath);
+    }
+    sendJson(response, 200, { lesson });
+    return true;
+  }
+  if (request.method === "DELETE" && lessonMatch) {
+    const deleted = await store.deleteLesson(lessonMatch[1]);
+    await deletePrivateVideos(deleted.videoPath);
+    sendJson(response, 200, deleted);
+    return true;
+  }
+
+  if (request.method === "POST" && pathname === "/api/admin/video-upload") {
+    const body = await readJsonBody(request);
+    const lessonId = String(body.lessonId || "").trim();
+    const courses = await store.listAdminCourses();
+    if (!courses.some((course) => course.lessons.some((lesson) => lesson.id === lessonId))) {
+      sendJson(response, 404, { error: "Урок не найден." });
+      return true;
+    }
+    sendJson(response, 200, await createPrivateVideoUpload(lessonId, body));
+    return true;
+  }
+
+  if (request.method === "POST" && pathname === "/api/admin/course-access") {
+    const body = await readJsonBody(request);
+    const userId = String(body.userId || "").trim();
+    const courseId = String(body.courseId || "").trim();
+    if (!userId || !courseId) {
+      sendJson(response, 400, { error: "Укажите ID пользователя и курс." });
+      return true;
+    }
+    sendJson(response, 200, {
+      purchase: await store.grantCourseAccess(userId, courseId, "admin-test")
+    });
     return true;
   }
 

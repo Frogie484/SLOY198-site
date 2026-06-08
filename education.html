@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Образовательные программы SLOY198: видеокурс и персональное наставничество.">
   <title>Обучение — SLOY198</title>
-  <link rel="stylesheet" href="styles.css?v=20260607-6">
+  <link rel="stylesheet" href="styles.css?v=20260608-1">
 </head>
 <body>
   <header class="site-header">
@@ -25,36 +25,49 @@
       <span class="page-number">05</span>
     </section>
 
+    <section class="section section--light education-catalog-section" id="video-courses">
+      <div class="section-head reveal">
+        <div>
+          <p class="eyebrow">Видеокурсы</p>
+          <h2 class="section-title">Учитесь в своём темпе</h2>
+        </div>
+        <p class="section-note">Курсы, уроки и доступ управляются через закрытую админ-панель SLOY198.</p>
+      </div>
+      <div class="education-client-id reveal" data-education-identity hidden>
+        <span>Ваш ID для тестового доступа</span>
+        <code data-education-user-id></code>
+      </div>
+      <div class="course-catalog" data-course-catalog aria-live="polite">
+        <p class="education-state">Загружаем видеокурсы...</p>
+      </div>
+    </section>
+
+    <section class="section education-player-section" data-player-section hidden>
+      <div class="education-player__copy">
+        <p class="eyebrow">Просмотр урока</p>
+        <h2 class="section-title" data-player-title>Урок</h2>
+        <p class="lead" data-player-description></p>
+      </div>
+      <div class="education-player">
+        <video controls playsinline preload="metadata" data-course-player>
+          Ваш браузер не поддерживает воспроизведение видео.
+        </video>
+        <p class="education-player__status" data-player-status aria-live="polite"></p>
+      </div>
+    </section>
+
     <section class="section section--light">
       <div class="section-head reveal">
         <div>
-          <p class="eyebrow">Направления</p>
-          <h2 class="section-title">Выберите подходящий формат</h2>
+          <p class="eyebrow">Персональный формат</p>
+          <h2 class="section-title">Наставничество</h2>
         </div>
-        <p class="section-note">Структура раздела модульная: новые образовательные направления можно добавлять отдельными карточками.</p>
+        <p class="section-note">Индивидуальная работа, стратегия и сопровождение с учётом ваших задач.</p>
       </div>
-      <div class="education-grid" data-education-catalog>
-        <article class="education-card reveal" data-education-type="video-course">
-          <div class="education-card__visual" aria-hidden="true">
-            <span class="education-card__index">01</span>
-            <span class="education-card__symbol">▶</span>
-          </div>
-          <div class="education-card__content">
-            <span class="education-card__label">Самостоятельный формат</span>
-            <h2>Видеокурс</h2>
-            <p>Здесь будет подробное описание программы, состава модулей, длительности курса и результата обучения.</p>
-            <ul class="education-card__meta">
-              <li>Уроки в удобном темпе</li>
-              <li>Практические материалы</li>
-              <li>Доступ к обновлениям</li>
-            </ul>
-            <a class="button" href="contacts.html">Получить доступ</a>
-          </div>
-        </article>
-
+      <div class="education-grid education-grid--single">
         <article class="education-card reveal" data-education-type="mentoring">
           <div class="education-card__visual education-card__visual--mentoring" aria-hidden="true">
-            <span class="education-card__index">02</span>
+            <span class="education-card__index">01</span>
             <span class="education-card__symbol">✦</span>
           </div>
           <div class="education-card__content">
@@ -73,6 +86,8 @@
     </section>
   </main>
   <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198</span></a><p class="footer-title">Знания, которые становятся основой уверенных решений.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
-  <script src="script.js?v=20260607-6"></script>
+  <script src="schedule-api.js?v=20260608-1"></script>
+  <script src="education.js?v=20260608-1"></script>
+  <script src="script.js?v=20260608-1"></script>
 </body>
 </html>

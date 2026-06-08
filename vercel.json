@@ -14,6 +14,14 @@
     {
       "source": "/api/admin/bookings/:id",
       "destination": "/api/admin/booking?id=:id"
+    },
+    {
+      "source": "/api/admin/courses/:id",
+      "destination": "/api/admin/course?id=:id"
+    },
+    {
+      "source": "/api/admin/lessons/:id",
+      "destination": "/api/admin/lesson?id=:id"
     }
   ]
 }

@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Управление расписанием — SLOY198</title>
-  <link rel="stylesheet" href="admin.css?v=20260607-2">
+  <title>Панель управления — SLOY198</title>
+  <link rel="stylesheet" href="admin.css?v=20260608-1">
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -16,8 +16,8 @@
           <span>SLOY198</span>
         </a>
         <p class="admin-kicker">Закрытый раздел</p>
-        <h1>Управление расписанием</h1>
-        <p>Войдите, чтобы добавлять слоты и работать с записями клиентов.</p>
+        <h1>Панель управления</h1>
+        <p>Войдите, чтобы управлять расписанием консультаций и обучением.</p>
         <form class="admin-form" data-login-form>
           <label>
             <span>Логин</span>
@@ -37,67 +37,128 @@
       <header class="admin-header">
         <div>
           <a class="admin-brand" href="index.html"><span class="admin-brand__mark"></span><span>SLOY198</span></a>
-          <p>Расписание консультаций</p>
+          <p>Расписание и обучение</p>
         </div>
         <button class="admin-button admin-button--quiet" type="button" data-logout>Выйти</button>
       </header>
 
-      <section class="admin-stats" aria-label="Сводка расписания">
-        <article><span>Свободно</span><strong data-stat-free>0</strong></article>
-        <article><span>Занято</span><strong data-stat-booked>0</strong></article>
-        <article><span>Недоступно</span><strong data-stat-unavailable>0</strong></article>
-        <article><span>Новые заявки</span><strong data-stat-new>0</strong></article>
-      </section>
+      <nav class="admin-tabs" aria-label="Разделы админ-панели">
+        <button class="admin-tab is-active" type="button" data-admin-tab="schedule">Расписание</button>
+        <button class="admin-tab" type="button" data-admin-tab="education">Обучение</button>
+      </nav>
 
-      <section class="admin-panel">
-        <div class="admin-panel__heading">
-          <div>
-            <p class="admin-kicker">Новый интервал</p>
-            <h2>Добавить слот</h2>
-          </div>
-        </div>
-        <form class="slot-form" data-slot-form>
-          <label><span>Дата</span><input name="date" type="date" required></label>
-          <label><span>Время</span><input name="time" type="time" required></label>
-          <label>
-            <span>Длительность</span>
-            <select name="duration" required>
-              <option value="30">30 минут</option>
-              <option value="45">45 минут</option>
-              <option value="60">60 минут</option>
-              <option value="90">90 минут</option>
-            </select>
-          </label>
-          <label>
-            <span>Тип консультации</span>
-            <input name="type" type="text" list="consultation-types" placeholder="Например, индивидуальная" required>
-            <datalist id="consultation-types">
-              <option value="Индивидуальная консультация"></option>
-              <option value="Консультация по недвижимости"></option>
-              <option value="Наставничество"></option>
-              <option value="Онлайн-встреча"></option>
-            </datalist>
-          </label>
-          <button class="admin-button admin-button--primary" type="submit">Добавить слот</button>
-        </form>
-        <p class="admin-message" data-slot-message aria-live="polite"></p>
-      </section>
+      <div data-admin-view="schedule">
+        <section class="admin-stats" aria-label="Сводка расписания">
+          <article><span>Свободно</span><strong data-stat-free>0</strong></article>
+          <article><span>Занято</span><strong data-stat-booked>0</strong></article>
+          <article><span>Недоступно</span><strong data-stat-unavailable>0</strong></article>
+          <article><span>Новые заявки</span><strong data-stat-new>0</strong></article>
+        </section>
 
-      <section class="admin-panel">
-        <div class="admin-panel__heading admin-panel__heading--row">
-          <div>
-            <p class="admin-kicker">Календарь</p>
-            <h2>Слоты и записи</h2>
+        <section class="admin-panel">
+          <div class="admin-panel__heading">
+            <div>
+              <p class="admin-kicker">Новый интервал</p>
+              <h2>Добавить слот</h2>
+            </div>
           </div>
-          <button class="admin-button admin-button--quiet" type="button" data-refresh>Обновить</button>
-        </div>
-        <div class="schedule-list" data-schedule-list>
-          <p class="admin-empty">Загрузка расписания...</p>
-        </div>
-      </section>
+          <form class="slot-form" data-slot-form>
+            <label><span>Дата</span><input name="date" type="date" required></label>
+            <label><span>Время</span><input name="time" type="time" required></label>
+            <label>
+              <span>Длительность</span>
+              <select name="duration" required>
+                <option value="30">30 минут</option>
+                <option value="45">45 минут</option>
+                <option value="60">60 минут</option>
+                <option value="90">90 минут</option>
+              </select>
+            </label>
+            <label>
+              <span>Тип консультации</span>
+              <input name="type" type="text" list="consultation-types" placeholder="Например, индивидуальная" required>
+              <datalist id="consultation-types">
+                <option value="Индивидуальная консультация"></option>
+                <option value="Консультация по недвижимости"></option>
+                <option value="Наставничество"></option>
+                <option value="Онлайн-встреча"></option>
+              </datalist>
+            </label>
+            <button class="admin-button admin-button--primary" type="submit">Добавить слот</button>
+          </form>
+          <p class="admin-message" data-slot-message aria-live="polite"></p>
+        </section>
+
+        <section class="admin-panel">
+          <div class="admin-panel__heading admin-panel__heading--row">
+            <div>
+              <p class="admin-kicker">Календарь</p>
+              <h2>Слоты и записи</h2>
+            </div>
+            <button class="admin-button admin-button--quiet" type="button" data-refresh>Обновить</button>
+          </div>
+          <div class="schedule-list" data-schedule-list>
+            <p class="admin-empty">Загрузка расписания...</p>
+          </div>
+        </section>
+      </div>
+
+      <div data-admin-view="education" hidden>
+        <section class="admin-panel">
+          <div class="admin-panel__heading admin-panel__heading--row">
+            <div>
+              <p class="admin-kicker">Каталог</p>
+              <h2 data-course-form-title>Создать курс</h2>
+            </div>
+            <button class="admin-button admin-button--quiet" type="button" data-course-cancel hidden>Отменить редактирование</button>
+          </div>
+          <form class="course-form" data-course-form>
+            <input name="courseId" type="hidden">
+            <label><span>Название</span><input name="title" type="text" required></label>
+            <label><span>Стоимость, ₽</span><input name="price" type="number" min="0" step="1" value="0"></label>
+            <label class="admin-field--wide"><span>Описание</span><textarea name="description" rows="4"></textarea></label>
+            <label class="admin-field--wide"><span>Ссылка на превью</span><input name="previewImageUrl" type="url" placeholder="https://..."></label>
+            <label>
+              <span>Статус</span>
+              <select name="status">
+                <option value="draft">Черновик</option>
+                <option value="published">Опубликован</option>
+              </select>
+            </label>
+            <button class="admin-button admin-button--primary" type="submit">Сохранить курс</button>
+          </form>
+          <p class="admin-message" data-course-message aria-live="polite"></p>
+        </section>
+
+        <section class="admin-panel">
+          <div class="admin-panel__heading">
+            <p class="admin-kicker">Доступ для разработки</p>
+            <h2>Выдать тестовый доступ</h2>
+          </div>
+          <form class="access-form" data-access-form>
+            <label><span>ID пользователя</span><input name="userId" type="text" required placeholder="ID отображается на странице обучения"></label>
+            <label><span>Курс</span><select name="courseId" data-access-course required></select></label>
+            <button class="admin-button admin-button--primary" type="submit">Выдать тестовый доступ</button>
+          </form>
+          <p class="admin-message" data-access-message aria-live="polite"></p>
+        </section>
+
+        <section class="admin-panel">
+          <div class="admin-panel__heading admin-panel__heading--row">
+            <div>
+              <p class="admin-kicker">Курсы и уроки</p>
+              <h2>Управление обучением</h2>
+            </div>
+            <button class="admin-button admin-button--quiet" type="button" data-education-refresh>Обновить</button>
+          </div>
+          <div class="admin-courses" data-admin-courses>
+            <p class="admin-empty">Загрузка курсов...</p>
+          </div>
+        </section>
+      </div>
     </section>
   </main>
-  <script src="schedule-api.js?v=20260607-2"></script>
-  <script src="admin.js?v=20260607-2"></script>
+  <script src="schedule-api.js?v=20260608-1"></script>
+  <script src="admin.js?v=20260608-1"></script>
 </body>
 </html>

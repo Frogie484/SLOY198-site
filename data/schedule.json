@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "slots": [
     {
       "id": "0e38b15e-4454-4ee2-8d09-0b47af9b409c",
@@ -117,5 +117,9 @@
       "createdAt": "2026-06-07T15:50:20.633Z",
       "updatedAt": "2026-06-07T15:50:20.633Z"
     }
-  ]
+  ],
+  "users": [],
+  "purchases": [],
+  "courses": [],
+  "lessons": []
 }

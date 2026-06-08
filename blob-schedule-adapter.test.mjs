@@ -55,8 +55,24 @@ test("OIDC Blob mode accepts BLOB_STORE_ID and passes it to get and put", async 
       });
 
       await adapter.init();
-      assert.deepEqual(await adapter.read(), { version: 2, slots: [], bookings: [] });
-      await adapter.write({ version: 2, slots: [], bookings: [] });
+      assert.deepEqual(await adapter.read(), {
+        version: 3,
+        slots: [],
+        bookings: [],
+        users: [],
+        purchases: [],
+        courses: [],
+        lessons: []
+      });
+      await adapter.write({
+        version: 3,
+        slots: [],
+        bookings: [],
+        users: [],
+        purchases: [],
+        courses: [],
+        lessons: []
+      });
 
       assert.equal(calls[0].method, "get");
       assert.equal(calls[0].options.storeId, "store_test_oidc");

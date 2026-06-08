@@ -112,7 +112,11 @@ button {
 }
 
 .admin-form,
-.slot-form {
+.slot-form,
+.course-form,
+.access-form,
+.lesson-create-form,
+.lesson-edit-form {
   display: grid;
   gap: 18px;
 }
@@ -122,14 +126,22 @@ button {
 }
 
 .admin-form label,
-.slot-form label {
+.slot-form label,
+.course-form label,
+.access-form label,
+.lesson-create-form label,
+.lesson-edit-form label {
   display: grid;
   min-width: 0;
   gap: 8px;
 }
 
 .admin-form label span,
-.slot-form label span {
+.slot-form label span,
+.course-form label span,
+.access-form label span,
+.lesson-create-form label span,
+.lesson-edit-form label span {
   color: var(--admin-muted);
   font-size: 10px;
   font-weight: 700;
@@ -139,7 +151,16 @@ button {
 
 .admin-form input,
 .slot-form input,
-.slot-form select {
+.slot-form select,
+.course-form input,
+.course-form select,
+.course-form textarea,
+.access-form input,
+.access-form select,
+.lesson-create-form input,
+.lesson-create-form textarea,
+.lesson-edit-form input,
+.lesson-edit-form textarea {
   width: 100%;
   min-height: 48px;
   padding: 11px 13px;
@@ -153,7 +174,16 @@ button {
 
 .admin-form input:focus,
 .slot-form input:focus,
-.slot-form select:focus {
+.slot-form select:focus,
+.course-form input:focus,
+.course-form select:focus,
+.course-form textarea:focus,
+.access-form input:focus,
+.access-form select:focus,
+.lesson-create-form input:focus,
+.lesson-create-form textarea:focus,
+.lesson-edit-form input:focus,
+.lesson-edit-form textarea:focus {
   border-color: var(--admin-gold);
 }
 
@@ -216,6 +246,34 @@ button {
   font-size: 12px;
 }
 
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 6px;
+  border: 1px solid var(--admin-border);
+  background: rgba(5, 22, 30, 0.72);
+}
+
+.admin-tab {
+  min-height: 44px;
+  flex: 1;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--admin-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.admin-tab.is-active {
+  border-color: var(--admin-gold);
+  background: rgba(216, 189, 120, 0.12);
+  color: var(--admin-text);
+}
+
 .admin-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -276,6 +334,152 @@ button {
 .slot-form {
   grid-template-columns: 1fr 1fr 1fr 1.5fr auto;
   align-items: end;
+}
+
+.course-form {
+  grid-template-columns: minmax(220px, 1.5fr) minmax(140px, 0.5fr);
+  align-items: end;
+}
+
+.admin-field--wide {
+  grid-column: 1 / -1;
+}
+
+.course-form textarea,
+.lesson-create-form textarea,
+.lesson-edit-form textarea {
+  resize: vertical;
+}
+
+.access-form {
+  grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 1fr) auto;
+  align-items: end;
+}
+
+.admin-courses,
+.admin-lessons {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-course {
+  padding: clamp(20px, 3vw, 30px);
+  border: 1px solid rgba(246, 244, 237, 0.14);
+  background: rgba(5, 22, 30, 0.76);
+}
+
+.admin-course__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.admin-course__head .admin-kicker {
+  margin: 0 0 8px;
+}
+
+.admin-course__head h3 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: clamp(27px, 4vw, 38px);
+  font-weight: 500;
+}
+
+.admin-course__head p:not(.admin-kicker) {
+  max-width: 680px;
+  margin: 10px 0 0;
+  color: var(--admin-muted);
+  line-height: 1.6;
+}
+
+.admin-lesson {
+  padding: 18px;
+  border: 1px solid rgba(246, 244, 237, 0.11);
+  background: rgba(16, 42, 55, 0.62);
+}
+
+.admin-lesson__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+
+.admin-lesson__head strong {
+  margin-right: 4px;
+  color: var(--admin-gold);
+  font-family: Georgia, serif;
+  font-size: 23px;
+  font-weight: 500;
+}
+
+.admin-education-badge {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(174, 187, 192, 0.12);
+  color: var(--admin-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-education-badge.is-published,
+.admin-education-badge.has-video {
+  background: rgba(120, 185, 154, 0.14);
+  color: #9ed4ba;
+}
+
+.lesson-edit-form,
+.lesson-create-form {
+  grid-template-columns: minmax(180px, 0.7fr) minmax(240px, 1.3fr) auto;
+  align-items: end;
+}
+
+.lesson-edit-form .admin-field--wide,
+.lesson-create-form .admin-field--wide {
+  grid-column: auto;
+}
+
+.lesson-create-form {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin-video-upload {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.admin-video-upload input {
+  min-width: 0;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.admin-video-upload input::file-selector-button {
+  min-height: 38px;
+  margin-right: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--admin-border);
+  background: transparent;
+  color: var(--admin-text);
+  cursor: pointer;
+}
+
+.admin-education-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 .schedule-list {
@@ -394,6 +598,18 @@ button {
   .slot-form .admin-button {
     grid-column: 1 / -1;
   }
+
+  .access-form,
+  .lesson-edit-form,
+  .lesson-create-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .access-form .admin-button,
+  .lesson-edit-form .admin-button,
+  .lesson-create-form .admin-button {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 720px) {
@@ -426,6 +642,14 @@ button {
     max-width: none;
     justify-content: flex-start;
   }
+
+  .admin-course__head {
+    flex-direction: column;
+  }
+
+  .admin-education-actions {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 480px) {
@@ -441,7 +665,26 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .course-form,
+  .access-form,
+  .lesson-edit-form,
+  .lesson-create-form,
+  .admin-video-upload {
+    grid-template-columns: 1fr;
+  }
+
   .slot-form .admin-button {
+    grid-column: auto;
+  }
+
+  .access-form .admin-button,
+  .lesson-edit-form .admin-button,
+  .lesson-create-form .admin-button {
+    grid-column: auto;
+  }
+
+  .lesson-edit-form .admin-field--wide,
+  .lesson-create-form .admin-field--wide {
     grid-column: auto;
   }
 

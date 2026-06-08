@@ -98,7 +98,15 @@ const readSnapshot = async (
 
 const serialize = (database) => `${JSON.stringify(database, null, 2)}\n`;
 
-const defaultEmptyDatabase = () => ({ version: 2, slots: [], bookings: [] });
+const defaultEmptyDatabase = () => ({
+  version: 3,
+  slots: [],
+  bookings: [],
+  users: [],
+  purchases: [],
+  courses: [],
+  lessons: []
+});
 
 export const getBlobCommandOptions = () => {
   const storeId = process.env.BLOB_STORE_ID?.trim();
