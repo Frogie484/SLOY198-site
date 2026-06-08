@@ -1,0 +1,1293 @@
+diff --git a/about.html b/about.html
+index 7c5e24b..a35be72 100644
+--- a/about.html
++++ b/about.html
+@@ -3,22 +3,22 @@
+ <head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-  <meta name="description" content="О компании Aurelia Estate.">
+-  <title>О компании — Aurelia Estate</title>
+-  <link rel="stylesheet" href="styles.css">
++  <meta name="description" content="О компании SLOY198.">
++  <title>О компании — SLOY198</title>
++  <link rel="stylesheet" href="styles.css?v=20260607-2">
+ </head>
+ <body>
+   <header class="site-header">
+-    <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">Aurelia<small>Private estate selection</small></span></a>
++    <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198<small>Private estate selection</small></span></a>
+     <nav class="nav" aria-label="Основная навигация">
+-      <a href="index.html">Главная</a><a href="selection.html">Подбор</a><a href="properties.html">Объекты</a><a class="active" href="about.html">О компании</a><a href="consultation.html">Консультация</a><a href="contacts.html">Контакты</a>
++      <a href="index.html">Главная</a><a href="selection.html">Подбор</a><a href="properties.html">Объекты</a><a class="active" href="about.html">О компании</a><a href="education.html">Обучение</a><a href="consultation.html">Консультация</a><a href="contacts.html">Контакты</a>
+     </nav>
+     <button class="menu-toggle" type="button" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span></button>
+   </header>
+   <main>
+     <section class="page-hero">
+       <div class="page-hero__content reveal">
+-        <p class="eyebrow">Aurelia Estate</p>
++        <p class="eyebrow">SLOY198</p>
+         <h1 class="display-title">Экспертиза с <em>человеческим</em> лицом</h1>
+         <p class="lead">Бутиковое агентство, где глубокое знание рынка соединяется с деликатностью, насмотренностью и уважением к частной жизни.</p>
+       </div>
+@@ -27,7 +27,7 @@
+     <section class="section">
+       <div class="quote reveal">
+         <p>Мы не продаём квадратные метры. Мы помогаем найти точку опоры для новой главы жизни.</p>
+-        <cite>Евгения Орлова · основатель Aurelia Estate</cite>
++        <cite>Евгения Орлова · основатель SLOY198</cite>
+       </div>
+     </section>
+     <section class="section section--light">
+@@ -42,7 +42,7 @@
+     </section>
+     <section class="stats"><div class="stat reveal"><strong>2014</strong><span>год основания</span></div><div class="stat reveal"><strong>9</strong><span>экспертов в команде</span></div><div class="stat reveal"><strong>18</strong><span>рынков присутствия</span></div><div class="stat reveal"><strong>24/7</strong><span>личная связь</span></div></section>
+   </main>
+-  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">Aurelia</span></a><p class="footer-title">Отношения, которые продолжаются после сделки.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
+-  <script src="script.js"></script>
++  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198</span></a><p class="footer-title">Отношения, которые продолжаются после сделки.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
++  <script src="script.js?v=20260607-2"></script>
+ </body>
+ </html>
+diff --git a/build.mjs b/build.mjs
+new file mode 100644
+index 0000000..6d9e463
+--- /dev/null
++++ b/build.mjs
+@@ -0,0 +1,50 @@
++import { cp, mkdir, readFile, readdir, rm } from "node:fs/promises";
++import { extname } from "node:path";
++import { fileURLToPath } from "node:url";
++
++const root = new URL(".", import.meta.url);
++const output = new URL("dist/", root);
++const viewportTag = '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
++const sourceExtensions = new Set([".html", ".css", ".js"]);
++const sourceFiles = (await readdir(root, { withFileTypes: true }))
++  .filter((entry) => entry.isFile() && sourceExtensions.has(extname(entry.name)))
++  .map((entry) => entry.name)
++  .filter((name) => name !== "build.mjs");
++const htmlFiles = sourceFiles.filter((name) => extname(name) === ".html");
++const errors = [];
++
++for (const file of sourceFiles) {
++  const content = await readFile(new URL(file, root), "utf8");
++
++  if (extname(file) !== ".html") {
++    continue;
++  }
++
++  if (!content.includes(viewportTag)) {
++    errors.push(`${file}: отсутствует обязательный viewport`);
++  }
++
++  const localLinks = [...content.matchAll(/href="([^"#?]+\.html)(?:#[^"]*)?"/g)]
++    .map((match) => match[1]);
++
++  for (const link of localLinks) {
++    if (!htmlFiles.includes(link)) {
++      errors.push(`${file}: ссылка ведёт на отсутствующий файл ${link}`);
++    }
++  }
++}
++
++if (errors.length > 0) {
++  throw new Error(`Сборка остановлена:\n${errors.join("\n")}`);
++}
++
++await rm(output, { recursive: true, force: true });
++await mkdir(output, { recursive: true });
++
++for (const file of sourceFiles) {
++  await cp(new URL(file, root), new URL(file, output));
++}
++
++await cp(new URL("assets/", root), new URL("assets/", output), { recursive: true });
++
++console.log(`SLOY198: собрано ${htmlFiles.length} HTML-страниц в ${fileURLToPath(output)}`);
+diff --git a/consultation-data.js b/consultation-data.js
+new file mode 100644
+index 0000000..4b4e1c0
+--- /dev/null
++++ b/consultation-data.js
+@@ -0,0 +1,19 @@
++/*
++ * Future result object schema:
++ * {
++ *   id: "scenario-id",
++ *   matches: ({ name, birthDate, day, month, year }) => true,
++ *   eyebrow: "Тип консультации",
++ *   title: "Заголовок результата",
++ *   summary: "Краткий персональный результат",
++ *   details: ["Дополнительный вывод", "Следующий вывод"]
++ * }
++ */
++window.SLOY198_CONSULTATION_RESULTS = [];
++
++window.SLOY198_CONSULTATION_FALLBACK = {
++  eyebrow: "Предварительный результат",
++  title: "Ваш запрос принят",
++  summary: "Персональные сценарии находятся в подготовке. Интерфейс результата уже готов и автоматически покажет подходящий разбор после наполнения базы.",
++  details: []
++};
+diff --git a/consultation.html b/consultation.html
+index aef1754..4aa4de0 100644
+--- a/consultation.html
++++ b/consultation.html
+@@ -3,15 +3,15 @@
+ <head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-  <meta name="description" content="Консультация по подбору недвижимости Aurelia Estate.">
+-  <title>Консультация — Aurelia Estate</title>
+-  <link rel="stylesheet" href="styles.css">
++  <meta name="description" content="Консультация по подбору недвижимости SLOY198.">
++  <title>Консультация — SLOY198</title>
++  <link rel="stylesheet" href="styles.css?v=20260607-2">
+ </head>
+ <body>
+   <header class="site-header">
+-    <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">Aurelia<small>Private estate selection</small></span></a>
++    <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198<small>Private estate selection</small></span></a>
+     <nav class="nav" aria-label="Основная навигация">
+-      <a href="index.html">Главная</a><a href="selection.html">Подбор</a><a href="properties.html">Объекты</a><a href="about.html">О компании</a><a class="active" href="consultation.html">Консультация</a><a href="contacts.html">Контакты</a>
++      <a href="index.html">Главная</a><a href="selection.html">Подбор</a><a href="properties.html">Объекты</a><a href="about.html">О компании</a><a href="education.html">Обучение</a><a class="active" href="consultation.html">Консультация</a><a href="contacts.html">Контакты</a>
+     </nav>
+     <button class="menu-toggle" type="button" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span></button>
+   </header>
+@@ -25,6 +25,40 @@
+         <a class="button" href="#request">Оставить заявку</a>
+       </div>
+     </section>
++
++    <section class="section free-consultation" id="free-consultation">
++      <div class="free-consultation__intro reveal">
++        <p class="eyebrow">Знакомство с подходом</p>
++        <h2 class="section-title">Бесплатная консультация</h2>
++        <p class="lead">Укажите имя и дату рождения. Мы подготовили основу для персональных сценариев, которые будут подключены к форме после наполнения базы результатов.</p>
++      </div>
++      <div class="free-consultation__workspace">
++        <form class="free-consultation-form reveal" data-free-consultation novalidate>
++          <div class="form-grid">
++            <div class="field field--full">
++              <label for="free-name">Ваше имя</label>
++              <input id="free-name" name="name" type="text" autocomplete="name" minlength="2" required aria-describedby="free-consultation-status">
++            </div>
++            <div class="field field--full">
++              <label for="birth-date">Дата рождения</label>
++              <input id="birth-date" name="birthDate" type="date" autocomplete="bday" required aria-describedby="free-consultation-status">
++            </div>
++          </div>
++          <button class="button" type="submit" data-free-consultation-submit>Получить консультацию</button>
++          <p class="form-status" id="free-consultation-status" aria-live="polite"></p>
++          <p class="form-privacy">Нажимая кнопку, вы соглашаетесь на обработку введённых данных.</p>
++        </form>
++
++        <article class="consultation-result" data-consultation-result hidden tabindex="-1">
++          <span class="consultation-result__eyebrow" data-result-eyebrow>Предварительный результат</span>
++          <h3 data-result-title>Ваш результат готов</h3>
++          <p data-result-summary></p>
++          <div class="consultation-result__details" data-result-details hidden></div>
++          <span class="consultation-result__note">Расширенные сценарии будут подключаться через отдельный модуль данных.</span>
++        </article>
++      </div>
++    </section>
++
+     <section class="section section--light" id="request">
+       <div class="contact-layout">
+         <div class="reveal">
+@@ -47,7 +81,20 @@
+       </div>
+     </section>
+   </main>
+-  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">Aurelia</span></a><p class="footer-title">Начнём с разговора о том, что важно именно вам.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
+-  <script src="script.js"></script>
++
++  <div class="conversion-modal" data-conversion-modal hidden>
++    <div class="conversion-modal__backdrop" data-modal-close></div>
++    <section class="conversion-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="conversion-title" tabindex="-1">
++      <button class="conversion-modal__close" type="button" aria-label="Закрыть окно" data-modal-close>×</button>
++      <p class="eyebrow">Следующий шаг</p>
++      <h2 id="conversion-title">Хочешь узнать больше?</h2>
++      <p>Запишитесь на индивидуальную консультацию и получите более глубокий и персонализированный разбор вашей ситуации.</p>
++      <a class="button" href="#request" data-modal-cta>Записаться на консультацию</a>
++    </section>
++  </div>
++
++  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198</span></a><p class="footer-title">Начнём с разговора о том, что важно именно вам.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
++  <script src="consultation-data.js?v=20260607-2"></script>
++  <script src="script.js?v=20260607-2"></script>
+ </body>
+ </html>
+diff --git a/contacts.html b/contacts.html
+index a41ef74..c801290 100644
+--- a/contacts.html
++++ b/contacts.html
+@@ -3,15 +3,15 @@
+ <head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-  <meta name="description" content="Контакты Aurelia Estate.">
+-  <title>Контакты — Aurelia Estate</title>
+-  <link rel="stylesheet" href="styles.css">
++  <meta name="description" content="Контакты SLOY198.">
++  <title>Контакты — SLOY198</title>
++  <link rel="stylesheet" href="styles.css?v=20260607-2">
+ </head>
+ <body>
+   <header class="site-header">
+-    <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">Aurelia<small>Private estate selection</small></span></a>
++    <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198<small>Private estate selection</small></span></a>
+     <nav class="nav" aria-label="Основная навигация">
+-      <a href="index.html">Главная</a><a href="selection.html">Подбор</a><a href="properties.html">Объекты</a><a href="about.html">О компании</a><a href="consultation.html">Консультация</a><a class="active" href="contacts.html">Контакты</a>
++      <a href="index.html">Главная</a><a href="selection.html">Подбор</a><a href="properties.html">Объекты</a><a href="about.html">О компании</a><a href="education.html">Обучение</a><a href="consultation.html">Консультация</a><a class="active" href="contacts.html">Контакты</a>
+     </nav>
+     <button class="menu-toggle" type="button" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span></button>
+   </header>
+@@ -22,16 +22,16 @@
+         <h1 class="display-title">Начнём с <em>личного</em> разговора</h1>
+         <p class="lead">Напишите или позвоните нам. Мы бережно относимся к вашему времени и отвечаем на все обращения в течение рабочего дня.</p>
+       </div>
+-      <span class="page-number">06</span>
++      <span class="page-number">07</span>
+     </section>
+     <section class="section">
+       <div class="contact-layout">
+         <div class="reveal">
+-          <p class="eyebrow">Aurelia Estate</p>
++          <p class="eyebrow">SLOY198</p>
+           <h2 class="section-title">Москва</h2>
+           <div class="contact-list">
+             <div class="contact-item"><span>Телефон</span><a href="tel:+74951234567">+7 495 123-45-67</a></div>
+-            <div class="contact-item"><span>Почта</span><a href="mailto:hello@aurelia.estate">hello@aurelia.estate</a></div>
++            <div class="contact-item"><span>Почта</span><a href="mailto:hello@sloy198.ru">hello@sloy198.ru</a></div>
+             <div class="contact-item"><span>Офис</span><p>Пречистенская наб., 17</p></div>
+             <div class="contact-item"><span>Часы работы</span><p>Пн–Сб, 10:00–20:00</p></div>
+           </div>
+@@ -50,7 +50,7 @@
+       </div>
+     </section>
+   </main>
+-  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">Aurelia</span></a><p class="footer-title">Мы рядом, когда вам понадобится следующий адрес.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
+-  <script src="script.js"></script>
++  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198</span></a><p class="footer-title">Мы рядом, когда вам понадобится следующий адрес.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
++  <script src="script.js?v=20260607-2"></script>
+ </body>
+ </html>
+diff --git a/education.html b/education.html
+new file mode 100644
+index 0000000..cdb1042
+--- /dev/null
++++ b/education.html
+@@ -0,0 +1,78 @@
++<!doctype html>
++<html lang="ru">
++<head>
++  <meta charset="UTF-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1.0">
++  <meta name="description" content="Образовательные программы SLOY198: видеокурс и персональное наставничество.">
++  <title>Обучение — SLOY198</title>
++  <link rel="stylesheet" href="styles.css?v=20260607-2">
++</head>
++<body>
++  <header class="site-header">
++    <a class="brand" href="index.html" aria-label="SLOY198 — главная"><span class="brand__mark"></span><span class="brand__text">SLOY198<small>Private estate selection</small></span></a>
++    <nav class="nav" aria-label="Основная навигация">
++      <a href="index.html">Главная</a><a href="selection.html">Подбор</a><a href="properties.html">Объекты</a><a href="about.html">О компании</a><a class="active" href="education.html">Обучение</a><a href="consultation.html">Консультация</a><a href="contacts.html">Контакты</a>
++    </nav>
++    <button class="menu-toggle" type="button" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span></button>
++  </header>
++  <main>
++    <section class="page-hero education-hero">
++      <div class="page-hero__content reveal">
++        <p class="eyebrow">Знания и практика</p>
++        <h1 class="display-title">Обучение для <em>осознанных</em> решений</h1>
++        <p class="lead">Программы SLOY198 помогают глубже понимать рынок, видеть потенциал объектов и принимать уверенные решения о недвижимости.</p>
++      </div>
++      <span class="page-number">05</span>
++    </section>
++
++    <section class="section section--light">
++      <div class="section-head reveal">
++        <div>
++          <p class="eyebrow">Направления</p>
++          <h2 class="section-title">Выберите подходящий формат</h2>
++        </div>
++        <p class="section-note">Структура раздела модульная: новые образовательные направления можно добавлять отдельными карточками.</p>
++      </div>
++      <div class="education-grid" data-education-catalog>
++        <article class="education-card reveal" data-education-type="video-course">
++          <div class="education-card__visual" aria-hidden="true">
++            <span class="education-card__index">01</span>
++            <span class="education-card__symbol">▶</span>
++          </div>
++          <div class="education-card__content">
++            <span class="education-card__label">Самостоятельный формат</span>
++            <h2>Видеокурс</h2>
++            <p>Здесь будет подробное описание программы, состава модулей, длительности курса и результата обучения.</p>
++            <ul class="education-card__meta">
++              <li>Уроки в удобном темпе</li>
++              <li>Практические материалы</li>
++              <li>Доступ к обновлениям</li>
++            </ul>
++            <a class="button" href="contacts.html">Получить доступ</a>
++          </div>
++        </article>
++
++        <article class="education-card reveal" data-education-type="mentoring">
++          <div class="education-card__visual education-card__visual--mentoring" aria-hidden="true">
++            <span class="education-card__index">02</span>
++            <span class="education-card__symbol">✦</span>
++          </div>
++          <div class="education-card__content">
++            <span class="education-card__label">Персональный формат</span>
++            <h2>Наставничество</h2>
++            <p>Здесь будет описание индивидуальной программы, формата встреч, сопровождения и персональных задач участника.</p>
++            <ul class="education-card__meta">
++              <li>Личная стратегия</li>
++              <li>Регулярные встречи</li>
++              <li>Обратная связь и поддержка</li>
++            </ul>
++            <a class="button" href="consultation.html#request">Записаться</a>
++          </div>
++        </article>
++      </div>
++    </section>
++  </main>
++  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198</span></a><p class="footer-title">Знания, которые становятся основой уверенных решений.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
++  <script src="script.js?v=20260607-2"></script>
++</body>
++</html>
+diff --git a/index.html b/index.html
+index 2554f7c..045af2c 100644
+--- a/index.html
++++ b/index.html
+@@ -3,21 +3,22 @@
+ <head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-  <meta name="description" content="Aurelia Estate — персональный подбор премиальной недвижимости.">
+-  <title>Aurelia Estate — недвижимость, выбранная для вас</title>
+-  <link rel="stylesheet" href="styles.css">
++  <meta name="description" content="SLOY198 — персональный подбор премиальной недвижимости.">
++  <title>SLOY198 — недвижимость, выбранная для вас</title>
++  <link rel="stylesheet" href="styles.css?v=20260607-2">
+ </head>
+ <body>
+   <header class="site-header">
+-    <a class="brand" href="index.html" aria-label="Aurelia Estate — главная">
++    <a class="brand" href="index.html" aria-label="SLOY198 — главная">
+       <span class="brand__mark"></span>
+-      <span class="brand__text">Aurelia<small>Private estate selection</small></span>
++      <span class="brand__text">SLOY198<small>Private estate selection</small></span>
+     </a>
+     <nav class="nav" aria-label="Основная навигация">
+       <a class="active" href="index.html">Главная</a>
+       <a href="selection.html">Подбор</a>
+       <a href="properties.html">Объекты</a>
+       <a href="about.html">О компании</a>
++      <a href="education.html">Обучение</a>
+       <a href="consultation.html">Консультация</a>
+       <a href="contacts.html">Контакты</a>
+     </nav>
+@@ -41,7 +42,7 @@
+       <div class="hero-index">55°45′ N · 37°37′ E</div>
+     </section>
+ 
+-    <section class="stats" aria-label="Aurelia в цифрах">
++    <section class="stats" aria-label="SLOY198 в цифрах">
+       <div class="stat reveal"><strong>12</strong><span>лет экспертизы</span></div>
+       <div class="stat reveal"><strong>780+</strong><span>закрытых сделок</span></div>
+       <div class="stat reveal"><strong>94%</strong><span>по рекомендациям</span></div>
+@@ -105,11 +106,11 @@
+ 
+   <footer class="site-footer">
+     <div>
+-      <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">Aurelia</span></a>
++      <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198</span></a>
+       <p class="footer-title">Найдём пространство, в котором начинается ваша следующая глава.</p>
+     </div>
+     <div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div>
+   </footer>
+-  <script src="script.js"></script>
++  <script src="script.js?v=20260607-2"></script>
+ </body>
+ </html>
+diff --git a/package-lock.json b/package-lock.json
+index 9ab25d9..b142aaf 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1,11 +1,11 @@
+ {
+-  "name": "site-dlya-evgenii",
++  "name": "sloy198",
+   "version": "1.0.0",
+   "lockfileVersion": 3,
+   "requires": true,
+   "packages": {
+     "": {
+-      "name": "site-dlya-evgenii",
++      "name": "sloy198",
+       "version": "1.0.0"
+     }
+   }
+diff --git a/package.json b/package.json
+index 64483d5..d0742ec 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,9 @@
+ {
+-  "name": "site-dlya-evgenii",
++  "name": "sloy198",
+   "version": "1.0.0",
+-  "private": true
++  "private": true,
++  "type": "module",
++  "scripts": {
++    "build": "node build.mjs"
++  }
+ }
+-
+diff --git a/properties.html b/properties.html
+index dfc3892..5846f9a 100644
+--- a/properties.html
++++ b/properties.html
+@@ -3,15 +3,15 @@
+ <head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-  <meta name="description" content="Коллекция премиальной недвижимости Aurelia Estate.">
+-  <title>Объекты — Aurelia Estate</title>
+-  <link rel="stylesheet" href="styles.css">
++  <meta name="description" content="Коллекция премиальной недвижимости SLOY198.">
++  <title>Объекты — SLOY198</title>
++  <link rel="stylesheet" href="styles.css?v=20260607-2">
+ </head>
+ <body>
+   <header class="site-header">
+-    <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">Aurelia<small>Private estate selection</small></span></a>
++    <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198<small>Private estate selection</small></span></a>
+     <nav class="nav" aria-label="Основная навигация">
+-      <a href="index.html">Главная</a><a href="selection.html">Подбор</a><a class="active" href="properties.html">Объекты</a><a href="about.html">О компании</a><a href="consultation.html">Консультация</a><a href="contacts.html">Контакты</a>
++      <a href="index.html">Главная</a><a href="selection.html">Подбор</a><a class="active" href="properties.html">Объекты</a><a href="about.html">О компании</a><a href="education.html">Обучение</a><a href="consultation.html">Консультация</a><a href="contacts.html">Контакты</a>
+     </nav>
+     <button class="menu-toggle" type="button" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span></button>
+   </header>
+@@ -41,7 +41,7 @@
+       </div>
+     </section>
+   </main>
+-  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">Aurelia</span></a><p class="footer-title">Закрытая коллекция открывается в личном диалоге.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
+-  <script src="script.js"></script>
++  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198</span></a><p class="footer-title">Закрытая коллекция открывается в личном диалоге.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
++  <script src="script.js?v=20260607-2"></script>
+ </body>
+ </html>
+diff --git a/script.js b/script.js
+index e389038..854cb17 100644
+--- a/script.js
++++ b/script.js
+@@ -26,21 +26,27 @@ nav?.querySelectorAll("a").forEach((link) => {
+   });
+ });
+ 
+-const revealObserver = new IntersectionObserver(
+-  (entries) => {
+-    entries.forEach((entry) => {
+-      if (entry.isIntersecting) {
+-        entry.target.classList.add("is-visible");
+-        revealObserver.unobserve(entry.target);
+-      }
+-    });
+-  },
+-  { threshold: 0.12 }
+-);
++if ("IntersectionObserver" in window) {
++  const revealObserver = new IntersectionObserver(
++    (entries) => {
++      entries.forEach((entry) => {
++        if (entry.isIntersecting) {
++          entry.target.classList.add("is-visible");
++          revealObserver.unobserve(entry.target);
++        }
++      });
++    },
++    { threshold: 0.12 }
++  );
+ 
+-document.querySelectorAll(".reveal").forEach((element) => {
+-  revealObserver.observe(element);
+-});
++  document.querySelectorAll(".reveal").forEach((element) => {
++    revealObserver.observe(element);
++  });
++} else {
++  document.querySelectorAll(".reveal").forEach((element) => {
++    element.classList.add("is-visible");
++  });
++}
+ 
+ const filterButtons = document.querySelectorAll(".filter-button");
+ const catalogCards = document.querySelectorAll(".catalog-card");
+@@ -68,3 +74,145 @@ document.querySelectorAll("[data-form]").forEach((form) => {
+     form.reset();
+   });
+ });
++
++const freeConsultationForm = document.querySelector("[data-free-consultation]");
++const consultationResult = document.querySelector("[data-consultation-result]");
++const conversionModal = document.querySelector("[data-conversion-modal]");
++let modalReturnFocus = null;
++let modalCloseTimer = null;
++
++const closeConversionModal = () => {
++  if (!conversionModal || conversionModal.hidden) {
++    return;
++  }
++
++  conversionModal.classList.remove("is-open");
++  window.clearTimeout(modalCloseTimer);
++  modalCloseTimer = window.setTimeout(() => {
++    conversionModal.hidden = true;
++    document.body.classList.remove("modal-open");
++    modalReturnFocus?.focus();
++  }, 280);
++};
++
++const openConversionModal = () => {
++  const dialog = conversionModal?.querySelector(".conversion-modal__dialog");
++  if (!conversionModal || !dialog) {
++    return;
++  }
++
++  modalReturnFocus = document.activeElement;
++  conversionModal.hidden = false;
++  document.body.classList.add("modal-open");
++  window.requestAnimationFrame(() => {
++    conversionModal.classList.add("is-open");
++    dialog.focus();
++  });
++};
++
++conversionModal?.querySelectorAll("[data-modal-close]").forEach((control) => {
++  control.addEventListener("click", closeConversionModal);
++});
++
++conversionModal?.querySelector("[data-modal-cta]")?.addEventListener("click", () => {
++  closeConversionModal();
++});
++
++document.addEventListener("keydown", (event) => {
++  if (event.key === "Escape") {
++    if (conversionModal && !conversionModal.hidden) {
++      closeConversionModal();
++      return;
++    }
++
++    if (nav?.classList.contains("is-open")) {
++      menuToggle?.click();
++    }
++  }
++});
++
++const getConsultationResult = (formData) => {
++  const [year, month, day] = formData.birthDate.split("-").map(Number);
++  const context = { ...formData, day, month, year };
++  const scenarios = Array.isArray(window.SLOY198_CONSULTATION_RESULTS)
++    ? window.SLOY198_CONSULTATION_RESULTS
++    : [];
++
++  return scenarios.find((scenario) => {
++    try {
++      return typeof scenario.matches === "function" && scenario.matches(context);
++    } catch {
++      return false;
++    }
++  }) || window.SLOY198_CONSULTATION_FALLBACK || {
++    eyebrow: "Предварительный результат",
++    title: "Ваш запрос принят",
++    summary: "Персональный сценарий будет доступен после наполнения базы результатов.",
++    details: []
++  };
++};
++
++const renderConsultationResult = (result, name) => {
++  if (!consultationResult) {
++    return;
++  }
++
++  const details = Array.isArray(result.details) ? result.details : [];
++  consultationResult.querySelector("[data-result-eyebrow]").textContent = result.eyebrow;
++  consultationResult.querySelector("[data-result-title]").textContent = `${name}, ${result.title.toLowerCase()}`;
++  consultationResult.querySelector("[data-result-summary]").textContent = result.summary;
++
++  const detailsContainer = consultationResult.querySelector("[data-result-details]");
++  detailsContainer.replaceChildren();
++  details.forEach((detail) => {
++    const paragraph = document.createElement("p");
++    paragraph.textContent = detail;
++    detailsContainer.append(paragraph);
++  });
++  detailsContainer.hidden = details.length === 0;
++
++  consultationResult.hidden = false;
++  window.requestAnimationFrame(() => {
++    consultationResult.classList.add("is-visible");
++    consultationResult.focus({ preventScroll: true });
++    consultationResult.scrollIntoView({ behavior: "smooth", block: "center" });
++  });
++};
++
++if (freeConsultationForm) {
++  const nameInput = freeConsultationForm.querySelector('[name="name"]');
++  const birthDateInput = freeConsultationForm.querySelector('[name="birthDate"]');
++  const submitButton = freeConsultationForm.querySelector("[data-free-consultation-submit]");
++  birthDateInput.max = new Date().toISOString().split("T")[0];
++
++  const submitFreeConsultation = () => {
++    const status = freeConsultationForm.querySelector(".form-status");
++    const name = nameInput.value.trim();
++    const birthDate = birthDateInput.value;
++    const isDateValid = birthDate && birthDate <= birthDateInput.max;
++
++    nameInput.setAttribute("aria-invalid", String(name.length < 2));
++    birthDateInput.setAttribute("aria-invalid", String(!isDateValid));
++
++    if (name.length < 2 || !isDateValid) {
++      status.textContent = "Пожалуйста, укажите имя и корректную дату рождения.";
++      freeConsultationForm.reportValidity();
++      return;
++    }
++
++    status.textContent = "";
++    const result = getConsultationResult({ name, birthDate });
++    renderConsultationResult(result, name);
++    window.setTimeout(openConversionModal, 700);
++  };
++
++  freeConsultationForm.addEventListener("submit", (event) => {
++    event.preventDefault();
++    submitFreeConsultation();
++  });
++
++  submitButton.addEventListener("click", (event) => {
++    event.preventDefault();
++    submitFreeConsultation();
++  });
++}
+diff --git a/selection.html b/selection.html
+index cd267ac..07c1292 100644
+--- a/selection.html
++++ b/selection.html
+@@ -3,15 +3,15 @@
+ <head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-  <meta name="description" content="Персональный подбор премиальной недвижимости Aurelia Estate.">
+-  <title>Подбор недвижимости — Aurelia Estate</title>
+-  <link rel="stylesheet" href="styles.css">
++  <meta name="description" content="Персональный подбор премиальной недвижимости SLOY198.">
++  <title>Подбор недвижимости — SLOY198</title>
++  <link rel="stylesheet" href="styles.css?v=20260607-2">
+ </head>
+ <body>
+   <header class="site-header">
+-    <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">Aurelia<small>Private estate selection</small></span></a>
++    <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198<small>Private estate selection</small></span></a>
+     <nav class="nav" aria-label="Основная навигация">
+-      <a href="index.html">Главная</a><a class="active" href="selection.html">Подбор</a><a href="properties.html">Объекты</a><a href="about.html">О компании</a><a href="consultation.html">Консультация</a><a href="contacts.html">Контакты</a>
++      <a href="index.html">Главная</a><a class="active" href="selection.html">Подбор</a><a href="properties.html">Объекты</a><a href="about.html">О компании</a><a href="education.html">Обучение</a><a href="consultation.html">Консультация</a><a href="contacts.html">Контакты</a>
+     </nav>
+     <button class="menu-toggle" type="button" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span></button>
+   </header>
+@@ -42,7 +42,7 @@
+       </div>
+     </section>
+   </main>
+-  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">Aurelia</span></a><p class="footer-title">Ваши критерии становятся нашей точкой отсчёта.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
+-  <script src="script.js"></script>
++  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198</span></a><p class="footer-title">Ваши критерии становятся нашей точкой отсчёта.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
++  <script src="script.js?v=20260607-2"></script>
+ </body>
+ </html>
+diff --git a/styles.css b/styles.css
+index 07fb1b2..7c52ba2 100644
+--- a/styles.css
++++ b/styles.css
+@@ -25,6 +25,7 @@ html {
+ 
+ body {
+   margin: 0;
++  overflow-x: clip;
+   color: var(--white);
+   background:
+     radial-gradient(circle at 18% 10%, rgba(68, 105, 124, 0.3), transparent 32rem),
+@@ -33,7 +34,8 @@ body {
+   -webkit-font-smoothing: antialiased;
+ }
+ 
+-body.menu-open {
++body.menu-open,
++body.modal-open {
+   overflow: hidden;
+ }
+ 
+@@ -249,6 +251,7 @@ img {
+   letter-spacing: 0.2em;
+   text-transform: uppercase;
+   cursor: pointer;
++  text-align: center;
+   transition: color 0.3s ease, background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+ }
+ 
+@@ -416,6 +419,13 @@ img {
+   margin-bottom: 65px;
+ }
+ 
++.section-head > *,
++.split > *,
++.contact-layout > *,
++.free-consultation > * {
++  min-width: 0;
++}
++
+ .section-title {
+   max-width: 730px;
+   margin: 0;
+@@ -963,6 +973,10 @@ img {
+   border-color: var(--gold-dark);
+ }
+ 
++.field input[aria-invalid="true"] {
++  border-color: #9c4b43;
++}
++
+ .form-status {
+   min-height: 20px;
+   margin: 20px 0 0;
+@@ -970,6 +984,317 @@ img {
+   font-size: 12px;
+ }
+ 
++.form-privacy {
++  margin: 13px 0 0;
++  color: rgba(248, 247, 242, 0.4);
++  font-size: 10px;
++  line-height: 1.6;
++}
++
++.education-hero::after {
++  position: absolute;
++  z-index: -2;
++  top: 14%;
++  right: 8%;
++  width: min(36vw, 480px);
++  aspect-ratio: 1;
++  border-radius: 50%;
++  content: "";
++  background: url("assets/celestial-map.jpg") center 48% / 165% auto no-repeat;
++  box-shadow: 0 0 90px rgba(216, 189, 120, 0.08);
++  opacity: 0.38;
++}
++
++.education-grid {
++  display: grid;
++  grid-template-columns: repeat(2, minmax(0, 1fr));
++  gap: 24px;
++}
++
++.education-card {
++  display: grid;
++  grid-template-rows: minmax(250px, 0.8fr) auto;
++  min-width: 0;
++  overflow: hidden;
++  color: var(--white);
++  background: var(--ink);
++  box-shadow: var(--shadow);
++}
++
++.education-card__visual {
++  position: relative;
++  display: grid;
++  min-height: 280px;
++  place-items: center;
++  overflow: hidden;
++  border-bottom: 1px solid var(--line);
++  background:
++    radial-gradient(circle at center, rgba(245, 221, 160, 0.22), transparent 6%),
++    repeating-radial-gradient(circle at center, transparent 0 48px, rgba(216, 189, 120, 0.14) 49px 50px),
++    linear-gradient(145deg, #294d60, #07161f);
++}
++
++.education-card__visual--mentoring {
++  background:
++    radial-gradient(circle at 65% 35%, rgba(245, 221, 160, 0.24), transparent 7%),
++    linear-gradient(135deg, transparent 49.7%, rgba(216, 189, 120, 0.18) 50%, transparent 50.3%),
++    linear-gradient(35deg, transparent 49.7%, rgba(216, 189, 120, 0.11) 50%, transparent 50.3%),
++    linear-gradient(145deg, #3c5d6e, #0a1d28);
++}
++
++.education-card__index {
++  position: absolute;
++  top: 24px;
++  left: 26px;
++  color: rgba(245, 221, 160, 0.55);
++  font-family: var(--serif);
++  font-size: 13px;
++}
++
++.education-card__symbol {
++  display: grid;
++  width: 95px;
++  height: 95px;
++  place-items: center;
++  border: 1px solid rgba(245, 221, 160, 0.45);
++  border-radius: 50%;
++  color: var(--gold-bright);
++  font-size: 23px;
++  box-shadow: 0 0 45px rgba(216, 189, 120, 0.12);
++}
++
++.education-card__content {
++  display: flex;
++  flex-direction: column;
++  align-items: flex-start;
++  padding: clamp(30px, 4vw, 50px);
++}
++
++.education-card__label {
++  color: var(--gold);
++  font-size: 8px;
++  letter-spacing: 0.22em;
++  text-transform: uppercase;
++}
++
++.education-card h2 {
++  margin: 13px 0 18px;
++  font-family: var(--serif);
++  font-size: clamp(36px, 4vw, 55px);
++  font-weight: 400;
++}
++
++.education-card p {
++  margin: 0;
++  color: rgba(248, 247, 242, 0.6);
++  font-size: 14px;
++  line-height: 1.75;
++}
++
++.education-card__meta {
++  display: grid;
++  width: 100%;
++  gap: 0;
++  margin: 30px 0 35px;
++  padding: 0;
++  list-style: none;
++}
++
++.education-card__meta li {
++  padding: 12px 0;
++  border-top: 1px solid var(--line);
++  color: rgba(248, 247, 242, 0.62);
++  font-size: 11px;
++  letter-spacing: 0.06em;
++}
++
++.education-card .button {
++  margin-top: auto;
++}
++
++.free-consultation {
++  display: grid;
++  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
++  gap: 8vw;
++  align-items: start;
++}
++
++.free-consultation__intro {
++  position: sticky;
++  top: 120px;
++}
++
++.free-consultation__workspace {
++  display: grid;
++  min-width: 0;
++  gap: 24px;
++}
++
++.free-consultation-form {
++  padding: clamp(30px, 5vw, 60px);
++  border: 1px solid var(--line);
++  background: rgba(16, 42, 57, 0.54);
++  box-shadow: var(--shadow);
++}
++
++.free-consultation-form .form-grid {
++  margin-bottom: 34px;
++}
++
++.free-consultation-form .field label {
++  color: rgba(248, 247, 242, 0.52);
++}
++
++.free-consultation-form .field input {
++  color: var(--white);
++  color-scheme: dark;
++  border-color: rgba(216, 189, 120, 0.34);
++}
++
++.consultation-result {
++  padding: clamp(30px, 5vw, 58px);
++  border: 1px solid rgba(216, 189, 120, 0.42);
++  background:
++    radial-gradient(circle at 92% 12%, rgba(216, 189, 120, 0.12), transparent 25%),
++    #0b222f;
++  box-shadow: var(--shadow);
++  opacity: 0;
++  outline: 0;
++  transform: translateY(24px);
++  transition: opacity 0.55s ease, transform 0.55s ease;
++}
++
++.consultation-result[hidden],
++.conversion-modal[hidden] {
++  display: none;
++}
++
++.consultation-result.is-visible {
++  opacity: 1;
++  transform: translateY(0);
++}
++
++.consultation-result__eyebrow {
++  color: var(--gold);
++  font-size: 9px;
++  letter-spacing: 0.25em;
++  text-transform: uppercase;
++}
++
++.consultation-result h3 {
++  margin: 16px 0;
++  font-family: var(--serif);
++  font-size: clamp(32px, 4vw, 48px);
++  font-weight: 400;
++}
++
++.consultation-result > p,
++.consultation-result__details p {
++  margin: 0;
++  color: rgba(248, 247, 242, 0.64);
++  font-size: 14px;
++  line-height: 1.75;
++}
++
++.consultation-result__details {
++  display: grid;
++  gap: 12px;
++  margin-top: 25px;
++}
++
++.consultation-result__note {
++  display: block;
++  margin-top: 30px;
++  padding-top: 18px;
++  border-top: 1px solid var(--line);
++  color: rgba(248, 247, 242, 0.37);
++  font-size: 9px;
++  letter-spacing: 0.1em;
++}
++
++.conversion-modal {
++  position: fixed;
++  z-index: 100;
++  inset: 0;
++  display: grid;
++  padding: 24px;
++  place-items: center;
++  opacity: 0;
++  transition: opacity 0.28s ease;
++}
++
++.conversion-modal.is-open {
++  opacity: 1;
++}
++
++.conversion-modal__backdrop {
++  position: absolute;
++  inset: 0;
++  background: rgba(2, 10, 15, 0.82);
++  backdrop-filter: blur(12px);
++}
++
++.conversion-modal__dialog {
++  position: relative;
++  z-index: 1;
++  width: min(620px, 100%);
++  max-height: calc(100svh - 48px);
++  overflow-y: auto;
++  padding: clamp(36px, 6vw, 68px);
++  border: 1px solid rgba(216, 189, 120, 0.45);
++  outline: 0;
++  background:
++    radial-gradient(circle at 85% 8%, rgba(216, 189, 120, 0.18), transparent 25%),
++    var(--ink-soft);
++  box-shadow: 0 35px 110px rgba(0, 0, 0, 0.55);
++  transform: translateY(25px) scale(0.97);
++  transition: transform 0.35s ease;
++}
++
++.conversion-modal.is-open .conversion-modal__dialog {
++  transform: translateY(0) scale(1);
++}
++
++.conversion-modal__dialog h2 {
++  max-width: 480px;
++  margin: 0;
++  font-family: var(--serif);
++  font-size: clamp(40px, 6vw, 67px);
++  font-weight: 400;
++  line-height: 1;
++}
++
++.conversion-modal__dialog > p:not(.eyebrow) {
++  margin: 25px 0 32px;
++  color: rgba(248, 247, 242, 0.65);
++  font-size: 14px;
++  line-height: 1.75;
++}
++
++.conversion-modal__close {
++  position: absolute;
++  top: 18px;
++  right: 18px;
++  display: grid;
++  width: 42px;
++  height: 42px;
++  padding: 0;
++  place-items: center;
++  border: 1px solid var(--line);
++  border-radius: 50%;
++  background: transparent;
++  color: var(--gold-bright);
++  font-size: 24px;
++  font-weight: 200;
++  cursor: pointer;
++  transition: background 0.25s ease, transform 0.25s ease;
++}
++
++.conversion-modal__close:hover {
++  background: rgba(216, 189, 120, 0.12);
++  transform: rotate(90deg);
++}
++
+ .site-footer {
+   display: grid;
+   grid-template-columns: 1fr auto;
+@@ -1026,7 +1351,7 @@ img {
+   }
+ }
+ 
+-@media (max-width: 800px) {
++@media (max-width: 980px) {
+   .site-header {
+     padding: 16px 18px;
+   }
+@@ -1052,8 +1377,10 @@ img {
+     inset: 0;
+     display: flex;
+     flex-direction: column;
+-    justify-content: center;
+-    gap: 7px;
++    justify-content: flex-start;
++    gap: 2px;
++    overflow-y: auto;
++    padding: 88px 18px 28px;
+     border: 0;
+     border-radius: 0;
+     background: rgba(5, 19, 27, 0.97);
+@@ -1071,9 +1398,9 @@ img {
+ 
+   .nav a {
+     min-width: 210px;
+-    padding: 14px 20px;
++    padding: 10px 20px;
+     font-family: var(--serif);
+-    font-size: 22px;
++    font-size: 21px;
+     letter-spacing: 0;
+     text-align: center;
+     text-transform: none;
+@@ -1139,7 +1466,8 @@ img {
+   }
+ 
+   .property-grid,
+-  .process-grid {
++  .process-grid,
++  .education-grid {
+     grid-template-columns: 1fr;
+   }
+ 
+@@ -1182,6 +1510,15 @@ img {
+     grid-template-columns: 1fr;
+   }
+ 
++  .free-consultation {
++    grid-template-columns: 1fr;
++    gap: 45px;
++  }
++
++  .free-consultation__intro {
++    position: static;
++  }
++
+   .consultation-hero {
+     align-items: flex-end;
+     padding: 130px 18px 35px;
+@@ -1202,6 +1539,87 @@ img {
+   }
+ }
+ 
++@media (max-width: 768px) {
++  .display-title {
++    font-size: clamp(43px, 13vw, 68px);
++    overflow-wrap: break-word;
++  }
++
++  .section-title {
++    font-size: clamp(38px, 11vw, 58px);
++  }
++
++  .lead {
++    font-size: 15px;
++    line-height: 1.65;
++  }
++
++  .section {
++    padding: 78px 20px;
++  }
++
++  .section-head {
++    margin-bottom: 45px;
++  }
++
++  .home-hero {
++    padding-inline: 20px;
++  }
++
++  .page-hero {
++    padding-inline: 20px;
++  }
++
++  .page-number {
++    right: 20px;
++  }
++
++  .education-card__visual {
++    min-height: 230px;
++  }
++
++  .education-card__content,
++  .contact-form,
++  .free-consultation-form,
++  .consultation-result {
++    padding: 30px 24px;
++  }
++
++  .field input,
++  .field select,
++  .field textarea {
++    min-height: 48px;
++    font-size: 16px;
++  }
++
++  .button {
++    min-height: 52px;
++    padding-inline: 22px;
++  }
++
++  .consultation-panel h1 {
++    font-size: clamp(35px, 10.5vw, 54px);
++    overflow-wrap: break-word;
++  }
++
++  .conversion-modal {
++    padding: 14px;
++  }
++
++  .conversion-modal__dialog {
++    max-height: calc(100svh - 28px);
++    padding: 54px 24px 30px;
++  }
++
++  .conversion-modal__dialog h2 {
++    font-size: clamp(38px, 12vw, 55px);
++  }
++
++  .conversion-modal__dialog .button {
++    width: 100%;
++  }
++}
++
+ @media (max-width: 520px) {
+   .brand__text {
+     font-size: 13px;
+@@ -1231,6 +1649,58 @@ img {
+   .catalog-card__image {
+     height: 260px;
+   }
++
++  .stats {
++    grid-template-columns: 1fr;
++  }
++
++  .stat,
++  .stat:nth-child(2) {
++    min-height: 120px;
++    border-right: 0;
++  }
++
++  .property-card,
++  .property-card:nth-child(2) {
++    min-height: 420px;
++  }
++
++  .property-card__content {
++    overflow-wrap: break-word;
++  }
++
++  .free-consultation-form .button,
++  .education-card .button,
++  .contact-form .button {
++    width: 100%;
++  }
++}
++
++@media (max-width: 360px) {
++  .brand__text small {
++    letter-spacing: 0.2em;
++  }
++
++  .brand__mark {
++    width: 31px;
++    height: 31px;
++  }
++
++  .home-hero {
++    min-height: 800px;
++  }
++
++  .consultation-hero {
++    padding-inline: 10px;
++  }
++
++  .consultation-panel {
++    padding: 28px 22px;
++  }
++
++  .consultation-panel h1 {
++    font-size: 34px;
++  }
+ }
+ 
+ @media (prefers-reduced-motion: reduce) {

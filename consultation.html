@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Консультация по подбору недвижимости SLOY198.">
+  <title>Консультация — SLOY198</title>
+  <link rel="stylesheet" href="styles.css?v=20260607-8">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198<small>Private estate selection</small></span></a>
+    <nav class="nav" aria-label="Основная навигация">
+      <a href="index.html">Главная</a><a href="selection.html">Подбор</a><a href="properties.html">Объекты</a><a href="about.html">О компании</a><a href="education.html">Обучение</a><a class="active" href="consultation.html">Консультация</a><a href="contacts.html">Контакты</a>
+    </nav>
+    <button class="menu-toggle" type="button" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span></button>
+  </header>
+  <main>
+    <section class="consultation-hero">
+      <div class="consultation-pan" aria-hidden="true"></div>
+      <div class="consultation-panel reveal">
+        <p class="eyebrow">Личный диалог</p>
+        <h1>Консультация по подбору недвижимости</h1>
+        <p>Расскажите, какое пространство вы ищете. На первой встрече мы уточним задачу, обозначим реальную картину рынка и предложим понятный маршрут к вашей цели.</p>
+        <a class="button" href="#booking">Записаться</a>
+      </div>
+    </section>
+
+    <section class="section section--light booking-section" id="booking">
+      <div class="booking-section__intro reveal">
+        <p class="eyebrow">Онлайн-запись</p>
+        <h2 class="section-title">Выберите удобное время</h2>
+        <p class="lead">В расписании отображаются только свободные слоты. После бронирования выбранное время автоматически станет недоступно другим клиентам.</p>
+      </div>
+      <div class="booking-workspace">
+        <div class="booking-slots reveal">
+          <div class="booking-slots__heading">
+            <h3>Свободные слоты</h3>
+            <button class="booking-refresh" type="button" data-booking-refresh>Обновить</button>
+          </div>
+          <div class="booking-slots__list" data-booking-slots>
+            <p class="booking-empty">Загрузка расписания...</p>
+          </div>
+        </div>
+
+        <form class="booking-form reveal" data-booking-form novalidate>
+          <h3>Данные для записи</h3>
+          <p class="booking-selected" data-selected-slot>Сначала выберите дату и время.</p>
+          <input name="slotId" type="hidden">
+          <div class="form-grid">
+            <div class="field"><label for="booking-name">Имя</label><input id="booking-name" name="name" type="text" autocomplete="name" minlength="2" required></div>
+            <div class="field"><label for="booking-phone">Телефон</label><input id="booking-phone" name="phone" type="tel" autocomplete="tel" required></div>
+            <div class="field"><label for="booking-telegram">Telegram</label><input id="booking-telegram" name="telegram" type="text" placeholder="@username" required></div>
+            <div class="field"><label for="booking-birth-date">Дата рождения</label><input id="booking-birth-date" name="birthDate" type="date" autocomplete="bday" required></div>
+            <div class="field field--full"><label for="booking-comment">Комментарий</label><textarea id="booking-comment" name="comment" placeholder="Расскажите коротко о вашем запросе"></textarea></div>
+          </div>
+          <button class="button" type="submit">Записаться</button>
+          <p class="form-status" data-booking-status aria-live="polite"></p>
+          <div class="booking-success" data-booking-success hidden tabindex="-1">
+            Вы успешно записались на консультацию. Мы скоро свяжемся с вами.
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <div class="conversion-modal booking-confirmation" data-booking-confirmation hidden>
+      <div class="conversion-modal__backdrop" data-change-booking-time></div>
+      <section class="conversion-modal__dialog booking-confirmation__dialog" role="dialog" aria-modal="true" aria-labelledby="booking-confirmation-title" tabindex="-1">
+        <button class="conversion-modal__close" type="button" aria-label="Изменить время" data-change-booking-time>×</button>
+        <p class="eyebrow">Проверка записи</p>
+        <h2 id="booking-confirmation-title">Подтвердите выбранное время</h2>
+        <dl class="booking-confirmation__summary">
+          <div><dt>Дата</dt><dd data-confirmation-date></dd></div>
+          <div><dt>Время</dt><dd data-confirmation-time></dd></div>
+          <div><dt>Длительность</dt><dd data-confirmation-duration></dd></div>
+        </dl>
+        <div class="booking-confirmation__actions">
+          <button class="button" type="button" data-confirm-booking>Подтвердить запись</button>
+          <button class="booking-confirmation__change" type="button" data-change-booking-time>Изменить время</button>
+        </div>
+        <p class="booking-confirmation__status" data-confirmation-status aria-live="polite"></p>
+      </section>
+    </div>
+
+    <section class="section free-consultation" id="free-consultation">
+      <div class="free-consultation__intro reveal">
+        <p class="eyebrow">Знакомство с подходом</p>
+        <h2 class="section-title">Бесплатная консультация</h2>
+        <p class="lead">Укажите имя и дату рождения. Мы подготовили основу для персональных сценариев, которые будут подключены к форме после наполнения базы результатов.</p>
+      </div>
+      <div class="free-consultation__workspace">
+        <form class="free-consultation-form reveal" data-free-consultation novalidate>
+          <div class="form-grid">
+            <div class="field field--full">
+              <label for="free-name">Ваше имя</label>
+              <input id="free-name" name="name" type="text" autocomplete="name" minlength="2" required aria-describedby="free-consultation-status">
+            </div>
+            <div class="field field--full">
+              <label for="birth-date">Дата рождения</label>
+              <input id="birth-date" name="birthDate" type="date" autocomplete="bday" required aria-describedby="free-consultation-status">
+            </div>
+          </div>
+          <button class="button" type="submit" data-free-consultation-submit>Получить консультацию</button>
+          <p class="form-status" id="free-consultation-status" aria-live="polite"></p>
+          <p class="form-privacy">Нажимая кнопку, вы соглашаетесь на обработку введённых данных.</p>
+        </form>
+
+        <article class="consultation-result" data-consultation-result hidden tabindex="-1">
+          <span class="consultation-result__eyebrow" data-result-eyebrow>Предварительный результат</span>
+          <h3 data-result-title>Ваш результат готов</h3>
+          <p data-result-summary></p>
+          <div class="consultation-result__details" data-result-details hidden></div>
+          <span class="consultation-result__note">Расширенные сценарии будут подключаться через отдельный модуль данных.</span>
+          <div class="consultation-result__cta">
+            <h4>Хочешь узнать больше?</h4>
+            <p>Выберите удобное время для индивидуальной консультации и получите более глубокий персональный разбор.</p>
+            <a class="button" href="#booking">Записаться на консультацию</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section--light" id="request">
+      <div class="contact-layout">
+        <div class="reveal">
+          <p class="eyebrow">Первый шаг</p>
+          <h2 class="section-title">30 минут, чтобы увидеть задачу яснее</h2>
+          <p class="lead">Встреча проходит онлайн или лично в нашем московском офисе. Все детали разговора остаются конфиденциальными.</p>
+        </div>
+        <form class="contact-form reveal" data-form>
+          <h2>Запрос на консультацию</h2>
+          <div class="form-grid">
+            <div class="field"><label for="name">Ваше имя</label><input id="name" name="name" type="text" required></div>
+            <div class="field"><label for="phone">Телефон</label><input id="phone" name="phone" type="tel" required></div>
+            <div class="field"><label for="format">Формат встречи</label><select id="format" name="format"><option>Онлайн</option><option>Лично в офисе</option></select></div>
+            <div class="field"><label for="time">Удобное время</label><input id="time" name="time" type="text" placeholder="Например, после 18:00"></div>
+            <div class="field field--full"><label for="message">Коротко о задаче</label><textarea id="message" name="message"></textarea></div>
+          </div>
+          <button class="button" type="submit">Отправить запрос</button>
+          <p class="form-status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198</span></a><p class="footer-title">Начнём с разговора о том, что важно именно вам.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
+  <script src="consultation-data.js?v=20260607-6"></script>
+  <script src="schedule-api.js?v=20260607-2"></script>
+  <script src="booking.js?v=20260607-3"></script>
+  <script src="script.js?v=20260607-7"></script>
+</body>
+</html>

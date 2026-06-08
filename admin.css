@@ -1,0 +1,456 @@
+:root {
+  --admin-bg: #081820;
+  --admin-panel: #102a37;
+  --admin-panel-soft: #173745;
+  --admin-text: #f6f4ed;
+  --admin-muted: #aebbc0;
+  --admin-gold: #d8bd78;
+  --admin-border: rgba(216, 189, 120, 0.25);
+  --admin-danger: #d47870;
+  --admin-success: #78b99a;
+  --admin-warning: #d6a75f;
+  font-family: Inter, "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--admin-bg);
+}
+
+body {
+  margin: 0;
+  color: var(--admin-text);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(74, 114, 133, 0.28), transparent 32rem),
+    var(--admin-bg);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.admin-shell {
+  width: min(1180px, calc(100% - 40px));
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: 28px 0 70px;
+}
+
+.admin-login {
+  display: grid;
+  min-height: calc(100svh - 56px);
+  place-items: center;
+}
+
+.admin-login__card {
+  width: min(480px, 100%);
+  padding: clamp(30px, 6vw, 58px);
+  border: 1px solid var(--admin-border);
+  background: rgba(16, 42, 55, 0.92);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+}
+
+.admin-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--admin-text);
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+}
+
+.admin-brand__mark {
+  width: 31px;
+  height: 31px;
+  border: 1px solid var(--admin-gold);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 9px var(--admin-bg);
+  background: var(--admin-gold);
+}
+
+.admin-kicker {
+  margin: 35px 0 10px;
+  color: var(--admin-gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.admin-login h1,
+.admin-panel h2 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-weight: 500;
+  line-height: 1.08;
+}
+
+.admin-login h1 {
+  font-size: clamp(38px, 8vw, 58px);
+}
+
+.admin-login__card > p:not(.admin-kicker) {
+  color: var(--admin-muted);
+  line-height: 1.65;
+}
+
+.admin-form,
+.slot-form {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-form {
+  margin-top: 30px;
+}
+
+.admin-form label,
+.slot-form label {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.admin-form label span,
+.slot-form label span {
+  color: var(--admin-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin-form input,
+.slot-form input,
+.slot-form select {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 1px solid rgba(246, 244, 237, 0.16);
+  border-radius: 5px;
+  outline: 0;
+  background: rgba(4, 17, 24, 0.7);
+  color: var(--admin-text);
+  color-scheme: dark;
+}
+
+.admin-form input:focus,
+.slot-form input:focus,
+.slot-form select:focus {
+  border-color: var(--admin-gold);
+}
+
+.admin-button {
+  min-height: 42px;
+  padding: 10px 17px;
+  border: 1px solid var(--admin-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--admin-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.admin-button:hover {
+  border-color: var(--admin-gold);
+  transform: translateY(-1px);
+}
+
+.admin-button--primary {
+  border-color: var(--admin-gold);
+  background: var(--admin-gold);
+  color: var(--admin-bg);
+}
+
+.admin-button--quiet {
+  color: var(--admin-muted);
+}
+
+.admin-button--danger {
+  border-color: rgba(212, 120, 112, 0.5);
+  color: #f0aaa4;
+}
+
+.admin-message {
+  min-height: 20px;
+  margin: 12px 0 0;
+  color: var(--admin-gold);
+  font-size: 13px;
+}
+
+.admin-message.is-error {
+  color: #f0aaa4;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 0 28px;
+}
+
+.admin-header p {
+  margin: 7px 0 0 43px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.admin-stats article {
+  padding: 24px;
+  border: 1px solid var(--admin-border);
+  background: rgba(16, 42, 55, 0.78);
+}
+
+.admin-stats span {
+  display: block;
+  color: var(--admin-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-stats strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--admin-gold);
+  font-family: Georgia, serif;
+  font-size: 38px;
+  font-weight: 500;
+}
+
+.admin-panel {
+  margin-top: 20px;
+  padding: clamp(22px, 4vw, 38px);
+  border: 1px solid var(--admin-border);
+  background: rgba(16, 42, 55, 0.78);
+}
+
+.admin-panel__heading {
+  margin-bottom: 28px;
+}
+
+.admin-panel__heading .admin-kicker {
+  margin-top: 0;
+}
+
+.admin-panel__heading h2 {
+  font-size: clamp(29px, 5vw, 42px);
+}
+
+.admin-panel__heading--row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.slot-form {
+  grid-template-columns: 1fr 1fr 1fr 1.5fr auto;
+  align-items: end;
+}
+
+.schedule-list {
+  display: grid;
+  gap: 14px;
+}
+
+.schedule-date {
+  margin: 22px 0 2px;
+  color: var(--admin-gold);
+  font-family: Georgia, serif;
+  font-size: 23px;
+}
+
+.schedule-date:first-child {
+  margin-top: 0;
+}
+
+.schedule-card {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.65fr) minmax(220px, 1fr) auto;
+  gap: 22px;
+  align-items: start;
+  padding: 20px;
+  border: 1px solid rgba(246, 244, 237, 0.12);
+  background: rgba(5, 22, 30, 0.76);
+}
+
+.schedule-card__time {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-card__time strong {
+  width: 100%;
+  font-family: Georgia, serif;
+  font-size: 30px;
+  font-weight: 500;
+}
+
+.schedule-card__time span,
+.schedule-card__client dt {
+  color: var(--admin-muted);
+  font-size: 11px;
+}
+
+.schedule-badge {
+  display: inline-flex;
+  width: max-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(120, 185, 154, 0.15);
+  color: #9ed4ba;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.schedule-badge--booked {
+  background: rgba(214, 167, 95, 0.14);
+  color: #e8c183;
+}
+
+.schedule-badge--unavailable {
+  background: rgba(212, 120, 112, 0.14);
+  color: #f0aaa4;
+}
+
+.schedule-badge--cancelled {
+  background: rgba(174, 187, 192, 0.12);
+  color: var(--admin-muted);
+}
+
+.schedule-card--unavailable,
+.schedule-card--cancelled {
+  border-color: rgba(212, 120, 112, 0.24);
+  opacity: 0.88;
+}
+
+.schedule-card__client {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 7px 14px;
+  margin: 0;
+}
+
+.schedule-card__client dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.schedule-card__actions {
+  display: flex;
+  max-width: 280px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.admin-empty {
+  margin: 0;
+  padding: 35px 20px;
+  border: 1px dashed var(--admin-border);
+  color: var(--admin-muted);
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  .slot-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .slot-form .admin-button {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-shell {
+    width: min(100% - 24px, 1180px);
+    padding-top: 12px;
+  }
+
+  .admin-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-stats article {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 17px 20px;
+  }
+
+  .admin-stats strong {
+    margin: 0;
+    font-size: 30px;
+  }
+
+  .schedule-card {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-card__actions {
+    max-width: none;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header {
+    align-items: flex-start;
+  }
+
+  .admin-header p {
+    margin-left: 0;
+  }
+
+  .slot-form {
+    grid-template-columns: 1fr;
+  }
+
+  .slot-form .admin-button {
+    grid-column: auto;
+  }
+
+  .admin-panel__heading--row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-button {
+    min-height: 46px;
+  }
+}
