@@ -4,3 +4,4 @@ node_modules/
 FULL_DIFF.patch
 schedule-store.test.mjs
 vercel-api.test.mjs
+blob-schedule-adapter.test.mjs

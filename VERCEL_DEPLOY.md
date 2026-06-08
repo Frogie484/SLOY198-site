@@ -1,6 +1,9 @@
 # Развёртывание на Vercel
 
-1. Подключите к проекту приватное хранилище Vercel Blob. После подключения Vercel автоматически добавит `BLOB_READ_WRITE_TOKEN`.
+1. Подключите к проекту приватное хранилище Vercel Blob.
+   - Для нового OIDC-подключения достаточно `BLOB_STORE_ID`; `VERCEL_OIDC_TOKEN` Vercel предоставляет функции автоматически.
+   - Старое подключение через `BLOB_READ_WRITE_TOKEN` также поддерживается.
+   - `BLOB_WEBHOOK_PUBLIC_KEY` используется для проверки webhook-подписей и не требуется операциям `get()`/`put()`.
 2. В Environment Variables добавьте:
    - `ADMIN_LOGIN`
    - `ADMIN_PASSWORD`

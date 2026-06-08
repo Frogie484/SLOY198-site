@@ -9,23 +9,28 @@ const BLOB_PATHNAME = "sloy198/private/schedule.json";
 const MAX_MUTATION_ATTEMPTS = 6;
 
 export class BlobScheduleAdapter {
+  constructor(blobClient = { get, put }) {
+    this.blobClient = blobClient;
+  }
+
   async init() {
     ensureBlobConfigured();
   }
 
   async read() {
-    const snapshot = await readSnapshot();
+    const snapshot = await readSnapshot(this.blobClient);
     return snapshot.database;
   }
 
   async write(database) {
     ensureBlobConfigured();
-    await put(BLOB_PATHNAME, serialize(database), {
+    await this.blobClient.put(BLOB_PATHNAME, serialize(database), {
       access: "private",
       addRandomSuffix: false,
       allowOverwrite: true,
       cacheControlMaxAge: 0,
-      contentType: "application/json"
+      contentType: "application/json",
+      ...getBlobCommandOptions()
     });
   }
 
@@ -33,22 +38,24 @@ export class BlobScheduleAdapter {
     ensureBlobConfigured();
 
     for (let attempt = 0; attempt < MAX_MUTATION_ATTEMPTS; attempt += 1) {
-      const snapshot = await readSnapshot(createEmptyDatabase);
+      const snapshot = await readSnapshot(this.blobClient, createEmptyDatabase);
       const result = await operation(snapshot.database);
 
       try {
-        await put(BLOB_PATHNAME, serialize(snapshot.database), {
+        await this.blobClient.put(BLOB_PATHNAME, serialize(snapshot.database), {
           access: "private",
           addRandomSuffix: false,
           allowOverwrite: Boolean(snapshot.etag),
           cacheControlMaxAge: 0,
           contentType: "application/json",
+          ...getBlobCommandOptions(),
           ...(snapshot.etag ? { ifMatch: snapshot.etag } : {})
         });
         return result;
       } catch (error) {
         const createdByAnotherRequest =
-          !snapshot.etag && Boolean((await readSnapshot(createEmptyDatabase)).etag);
+          !snapshot.etag &&
+          Boolean((await readSnapshot(this.blobClient, createEmptyDatabase)).etag);
         if (error instanceof BlobPreconditionFailedError || createdByAnotherRequest) {
           continue;
         }
@@ -63,11 +70,15 @@ export class BlobScheduleAdapter {
   }
 }
 
-const readSnapshot = async (createEmptyDatabase = defaultEmptyDatabase) => {
+const readSnapshot = async (
+  blobClient,
+  createEmptyDatabase = defaultEmptyDatabase
+) => {
   ensureBlobConfigured();
-  const result = await get(BLOB_PATHNAME, {
+  const result = await blobClient.get(BLOB_PATHNAME, {
     access: "private",
-    useCache: false
+    useCache: false,
+    ...getBlobCommandOptions()
   });
 
   if (!result) {
@@ -89,8 +100,16 @@ const serialize = (database) => `${JSON.stringify(database, null, 2)}\n`;
 
 const defaultEmptyDatabase = () => ({ version: 2, slots: [], bookings: [] });
 
-const ensureBlobConfigured = () => {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+export const getBlobCommandOptions = () => {
+  const storeId = process.env.BLOB_STORE_ID?.trim();
+  return storeId ? { storeId } : {};
+};
+
+export const ensureBlobConfigured = () => {
+  const hasOidcStore = Boolean(process.env.BLOB_STORE_ID?.trim());
+  const hasLegacyToken = Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
+
+  if (!hasOidcStore && !hasLegacyToken) {
     throw createHttpError(
       "Хранилище расписания не подключено. Добавьте Vercel Blob к проекту.",
       503

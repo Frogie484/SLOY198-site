@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node dev-server.mjs --host 0.0.0.0 --port 5173",
     "build": "node build.mjs",
-    "test": "node --test schedule-store.test.mjs vercel-api.test.mjs"
+    "test": "node --test schedule-store.test.mjs vercel-api.test.mjs blob-schedule-adapter.test.mjs"
   },
   "dependencies": {
     "@vercel/blob": "^2.4.0"
