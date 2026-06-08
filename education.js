@@ -26,6 +26,76 @@ const createElement = (tagName, className, text = "") => {
   return element;
 };
 
+const getEmbedUrl = (value) => {
+  if (!value) {
+    return "";
+  }
+  try {
+    const url = new URL(value, window.location.origin);
+    const host = url.hostname.replace(/^www\./, "");
+    if (host === "youtu.be") {
+      const videoId = url.pathname.slice(1);
+      return /^[a-zA-Z0-9_-]{6,}$/.test(videoId)
+        ? `https://www.youtube.com/embed/${videoId}`
+        : "";
+    }
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      const videoId = url.pathname.startsWith("/embed/")
+        ? url.pathname.split("/")[2]
+        : url.searchParams.get("v");
+      return /^[a-zA-Z0-9_-]{6,}$/.test(videoId || "")
+        ? `https://www.youtube.com/embed/${videoId}`
+        : "";
+    }
+    if (host === "vimeo.com" || host === "player.vimeo.com") {
+      const videoId = url.pathname.split("/").filter(Boolean).pop();
+      return /^\d+$/.test(videoId || "") ? `https://player.vimeo.com/video/${videoId}` : "";
+    }
+  } catch (error) {
+    return "";
+  }
+  return "";
+};
+
+const createCourseMedia = (course) => {
+  const media = createElement("div", "education-course__media");
+  const externalVideo = getEmbedUrl(
+    course.videoUrl || course.previewVideoUrl || course.previewImageUrl
+  );
+  const availableVideos = course.lessons.filter((lesson) => lesson.videoAvailable).length;
+
+  if (externalVideo) {
+    const frame = document.createElement("iframe");
+    frame.src = externalVideo;
+    frame.title = `Превью курса «${course.title}»`;
+    frame.loading = "lazy";
+    frame.referrerPolicy = "strict-origin-when-cross-origin";
+    frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+    frame.allowFullscreen = true;
+    media.append(frame);
+    return media;
+  }
+
+  if (course.previewImageUrl && !getEmbedUrl(course.previewImageUrl)) {
+    const image = document.createElement("img");
+    image.src = course.previewImageUrl;
+    image.alt = `Превью курса «${course.title}»`;
+    image.loading = "lazy";
+    image.addEventListener("error", () => image.remove(), { once: true });
+    media.append(image);
+  }
+
+  const state = createElement(
+    "span",
+    "education-course__media-state",
+    availableVideos > 0
+      ? `Видеоуроков в программе · ${availableVideos}`
+      : "Видео пока не добавлено"
+  );
+  media.append(state);
+  return media;
+};
+
 const createLesson = (lesson, course) => {
   const item = createElement("li", "education-course__lesson");
   const number = createElement(
@@ -56,24 +126,19 @@ const createLesson = (lesson, course) => {
 
 const createCourseCard = (course, index, testAccessEnabled) => {
   const article = createElement("article", "education-course");
-  const head = createElement("div", "education-course__head");
-  const heading = createElement("div", "");
-  heading.append(
-    createElement("span", "education-course__index", String(index + 1).padStart(2, "0")),
-    createElement("h3", "", course.title)
-  );
+  const content = createElement("div", "education-course__content");
   const meta = createElement("div", "education-course__meta");
   meta.append(
     createElement(
       "span",
       "education-course__access",
-      course.hasAccess ? "Доступ открыт" : "Видеокурс"
+      course.hasAccess ? "Доступ открыт" : `Видеокурс · ${String(index + 1).padStart(2, "0")}`
     ),
     createElement("strong", "education-course__price", formatPrice(course.price))
   );
-  head.append(heading, meta);
-  article.append(
-    head,
+  content.append(
+    meta,
+    createElement("h3", "", course.title),
     createElement(
       "p",
       "education-course__description",
@@ -88,20 +153,38 @@ const createCourseCard = (course, index, testAccessEnabled) => {
   );
   const lessons = createElement("ol", "education-course__lessons");
   course.lessons.forEach((lesson) => lessons.append(createLesson(lesson, course)));
-  article.append(lessonsTitle, lessons);
+  content.append(lessonsTitle, lessons);
 
-  if (!course.hasAccess && testAccessEnabled) {
-    const access = createElement("div", "education-course__access-actions");
+  const actions = createElement("div", "education-course__actions");
+  const firstAvailableLesson = course.lessons.find((lesson) => lesson.videoAvailable);
+  if (course.hasAccess && firstAvailableLesson) {
+    const watchButton = createElement("button", "button", "Смотреть курс");
+    watchButton.type = "button";
+    watchButton.dataset.lessonId = firstAvailableLesson.id;
+    watchButton.dataset.lessonTitle = firstAvailableLesson.title;
+    watchButton.dataset.lessonDescription = firstAvailableLesson.description || "";
+    actions.append(watchButton);
+  } else if (!course.hasAccess && testAccessEnabled) {
     const testButton = createElement("button", "button", "Получить тестовый доступ");
     testButton.type = "button";
     testButton.dataset.testAccess = course.id;
-    access.append(
+    actions.append(
       testButton,
       createElement("small", "", "Режим разработки до подключения ЮKassa")
     );
-    article.append(access);
+  } else if (!course.hasAccess) {
+    const accessLink = createElement("a", "button", "Получить доступ");
+    accessLink.href = "consultation.html#request";
+    actions.append(accessLink);
+  } else {
+    const unavailableButton = createElement("button", "button", "Видео пока не добавлено");
+    unavailableButton.type = "button";
+    unavailableButton.disabled = true;
+    actions.append(unavailableButton);
   }
 
+  content.append(actions);
+  article.append(createCourseMedia(course), content);
   return article;
 };
 

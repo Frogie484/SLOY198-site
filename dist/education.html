@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Образовательные программы SLOY198: видеокурс и персональное наставничество.">
   <title>Обучение — SLOY198</title>
-  <link rel="stylesheet" href="styles.css?v=20260608-2">
+  <link rel="stylesheet" href="styles.css?v=20260609-1">
 </head>
-<body>
+<body class="education-page">
   <header class="site-header">
     <a class="brand" href="index.html" aria-label="SLOY198 — главная"><span class="brand__mark"></span><span class="brand__text">SLOY198<small>Private estate selection</small></span></a>
     <nav class="nav" aria-label="Основная навигация">
@@ -16,41 +16,41 @@
     <button class="menu-toggle" type="button" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span></button>
   </header>
   <main>
-    <section class="section section--light education-offers-section" id="video-courses">
-      <div class="education-offers-grid">
-        <article class="education-offer-card reveal">
-          <div class="education-offer-card__head">
-            <span class="education-offer-card__label">Видеокурсы</span>
-            <h1>Учитесь в своём темпе</h1>
-            <p>Курсы, уроки и доступ управляются через закрытую админ-панель SLOY198.</p>
-          </div>
-          <div class="education-offer-card__body">
-            <div class="education-client-id" data-education-identity hidden>
-              <span>ID доступа</span>
-              <code data-education-user-id></code>
-            </div>
-            <div class="course-catalog" data-course-catalog aria-live="polite">
-              <p class="education-state">Загружаем видеокурсы...</p>
-            </div>
-          </div>
-        </article>
-
-        <article class="education-offer-card reveal" data-education-type="mentoring">
-          <div class="education-offer-card__head">
-            <span class="education-offer-card__label">Персональный формат</span>
-            <h2>Наставничество</h2>
-            <p>Индивидуальная программа, формат встреч, сопровождение и персональные задачи участника.</p>
-          </div>
-          <div class="education-offer-card__body education-offer-card__body--mentoring">
-            <ul class="education-offer-card__meta">
-              <li>Личная стратегия</li>
-              <li>Регулярные встречи</li>
-              <li>Обратная связь и поддержка</li>
-            </ul>
-            <a class="button" href="consultation.html#request">Записаться</a>
-          </div>
-        </article>
+    <section class="section section--light education-courses-section" id="video-courses">
+      <div class="section-head education-section-head reveal">
+        <div>
+          <p class="eyebrow">Обучение SLOY198</p>
+          <h1 class="section-title">Видеокурсы для уверенных решений</h1>
+        </div>
+        <p class="section-note">Изучайте материалы в своём темпе: программа, уроки и доступ собраны в одном спокойном пространстве.</p>
       </div>
+      <div class="education-client-id" data-education-identity hidden>
+        <span>ID для тестового доступа</span>
+        <code data-education-user-id></code>
+      </div>
+      <div class="course-catalog" data-course-catalog aria-live="polite">
+        <p class="education-state">Загружаем видеокурсы...</p>
+      </div>
+    </section>
+
+    <section class="section education-mentoring-section" id="mentoring">
+      <article class="education-mentoring reveal">
+        <div class="education-mentoring__copy">
+          <p class="eyebrow">Персональный формат</p>
+          <h2 class="section-title">Наставничество</h2>
+          <p class="lead">Индивидуальная программа, формат встреч, сопровождение и персональные задачи участника. Программа доступна по предварительной заявке.</p>
+          <a class="button" href="consultation.html#booking">Оставить заявку</a>
+        </div>
+        <div class="education-mentoring__details">
+          <span class="education-mentoring__status">Доступно по заявке</span>
+          <ol>
+            <li><span>01</span>Личная стратегия</li>
+            <li><span>02</span>Регулярные встречи</li>
+            <li><span>03</span>Обратная связь и поддержка</li>
+          </ol>
+          <p>Содержание и длительность программы формируются после установочной консультации.</p>
+        </div>
+      </article>
     </section>
 
     <section class="section education-player-section" data-player-section hidden>
@@ -70,7 +70,7 @@
   </main>
   <footer class="site-footer"><div><a class="brand" href="index.html"><span class="brand__mark"></span><span class="brand__text">SLOY198</span></a><p class="footer-title">Знания, которые становятся основой уверенных решений.</p></div><div class="footer-meta">Москва · 2026<br>Конфиденциально и лично</div></footer>
   <script src="schedule-api.js?v=20260608-1"></script>
-  <script src="education.js?v=20260608-2"></script>
+  <script src="education.js?v=20260609-1"></script>
   <script src="script.js?v=20260608-1"></script>
 </body>
 </html>
