@@ -175,6 +175,8 @@ const validateBooking = (body) => {
 };
 
 const handleApiRequest = async (request, response, pathname) => {
+  const requestUrl = new URL(request.url || "/", "http://localhost");
+  const adminAction = requestUrl.searchParams.get("action") || "";
   if (request.method === "GET" && pathname === "/api/slots") {
     sendJson(response, 200, { slots: await store.listAvailableSlots() });
     return true;
@@ -229,7 +231,11 @@ const handleApiRequest = async (request, response, pathname) => {
     return true;
   }
 
-  if (request.method === "POST" && pathname === "/api/admin/login") {
+  if (
+    request.method === "POST" &&
+    (pathname === "/api/admin/login" ||
+      (pathname === "/api/admin/auth" && adminAction === "login"))
+  ) {
     const body = await readJsonBody(request);
     const credentialsAreValid =
       equalCredentials(body.login, adminLogin) && equalCredentials(body.password, adminPassword);
@@ -247,14 +253,22 @@ const handleApiRequest = async (request, response, pathname) => {
     return true;
   }
 
-  if (request.method === "GET" && pathname === "/api/admin/session") {
+  if (
+    request.method === "GET" &&
+    (pathname === "/api/admin/session" ||
+      (pathname === "/api/admin/auth" && adminAction === "session"))
+  ) {
     sendJson(response, isAdminRequest(request) ? 200 : 401, {
       authenticated: isAdminRequest(request)
     });
     return true;
   }
 
-  if (request.method === "POST" && pathname === "/api/admin/logout") {
+  if (
+    request.method === "POST" &&
+    (pathname === "/api/admin/logout" ||
+      (pathname === "/api/admin/auth" && adminAction === "logout"))
+  ) {
     const sessionId = parseCookies(request).sloy198_admin_session;
     if (sessionId) {
       sessions.delete(sessionId);
@@ -270,29 +284,49 @@ const handleApiRequest = async (request, response, pathname) => {
     return true;
   }
 
-  if (request.method === "GET" && pathname === "/api/admin/schedule") {
+  if (
+    request.method === "GET" &&
+    (pathname === "/api/admin/schedule" ||
+      (pathname === "/api/admin/booking" && adminAction === "schedule"))
+  ) {
     sendJson(response, 200, { slots: await store.listAdminSchedule() });
     return true;
   }
 
-  if (request.method === "POST" && pathname === "/api/admin/slots") {
+  if (
+    request.method === "POST" &&
+    (pathname === "/api/admin/slots" ||
+      (pathname === "/api/admin/slot" && adminAction === "slots"))
+  ) {
     const slot = await store.createSlot(validateSlot(await readJsonBody(request)));
     sendJson(response, 201, { slot });
     return true;
   }
 
-  if (request.method === "GET" && pathname === "/api/admin/courses") {
+  if (
+    request.method === "GET" &&
+    (pathname === "/api/admin/courses" ||
+      (pathname === "/api/admin/content" && adminAction === "courses"))
+  ) {
     sendJson(response, 200, { courses: await store.listAdminCourses() });
     return true;
   }
 
-  if (request.method === "POST" && pathname === "/api/admin/courses") {
+  if (
+    request.method === "POST" &&
+    (pathname === "/api/admin/courses" ||
+      (pathname === "/api/admin/content" && adminAction === "courses"))
+  ) {
     const course = await store.createCourse(validateCourse(await readJsonBody(request)));
     sendJson(response, 201, { course });
     return true;
   }
 
-  const courseMatch = pathname.match(/^\/api\/admin\/courses\/([^/]+)$/);
+  const courseMatch =
+    pathname.match(/^\/api\/admin\/courses\/([^/]+)$/) ||
+    (pathname === "/api/admin/content" && adminAction === "course"
+      ? [pathname, requestUrl.searchParams.get("id")]
+      : null);
   if (request.method === "PATCH" && courseMatch) {
     const course = await store.updateCourse(
       courseMatch[1],
@@ -308,13 +342,21 @@ const handleApiRequest = async (request, response, pathname) => {
     return true;
   }
 
-  if (request.method === "POST" && pathname === "/api/admin/lessons") {
+  if (
+    request.method === "POST" &&
+    (pathname === "/api/admin/lessons" ||
+      (pathname === "/api/admin/content" && adminAction === "lessons"))
+  ) {
     const lesson = await store.createLesson(validateLesson(await readJsonBody(request)));
     sendJson(response, 201, { lesson });
     return true;
   }
 
-  const lessonMatch = pathname.match(/^\/api\/admin\/lessons\/([^/]+)$/);
+  const lessonMatch =
+    pathname.match(/^\/api\/admin\/lessons\/([^/]+)$/) ||
+    (pathname === "/api/admin/content" && adminAction === "lesson"
+      ? [pathname, requestUrl.searchParams.get("id")]
+      : null);
   if (request.method === "PATCH" && lessonMatch) {
     const body = await readJsonBody(request);
     if (body.direction) {
@@ -346,7 +388,11 @@ const handleApiRequest = async (request, response, pathname) => {
     return true;
   }
 
-  if (request.method === "POST" && pathname === "/api/admin/video-upload") {
+  if (
+    request.method === "POST" &&
+    (pathname === "/api/admin/video-upload" ||
+      (pathname === "/api/admin/content" && adminAction === "video-upload"))
+  ) {
     const body = await readJsonBody(request);
     const lessonId = String(body.lessonId || "").trim();
     const courses = await store.listAdminCourses();
@@ -358,7 +404,11 @@ const handleApiRequest = async (request, response, pathname) => {
     return true;
   }
 
-  if (request.method === "POST" && pathname === "/api/admin/course-access") {
+  if (
+    request.method === "POST" &&
+    (pathname === "/api/admin/course-access" ||
+      (pathname === "/api/admin/content" && adminAction === "course-access"))
+  ) {
     const body = await readJsonBody(request);
     const userId = String(body.userId || "").trim();
     const courseId = String(body.courseId || "").trim();
@@ -372,7 +422,11 @@ const handleApiRequest = async (request, response, pathname) => {
     return true;
   }
 
-  const slotMatch = pathname.match(/^\/api\/admin\/slots\/([^/]+)$/);
+  const slotMatch =
+    pathname.match(/^\/api\/admin\/slots\/([^/]+)$/) ||
+    (pathname === "/api/admin/slot" && adminAction === "slot"
+      ? [pathname, requestUrl.searchParams.get("id")]
+      : null);
   if (request.method === "DELETE" && slotMatch) {
     sendJson(response, 200, await store.deleteSlot(slotMatch[1]));
     return true;
@@ -387,7 +441,11 @@ const handleApiRequest = async (request, response, pathname) => {
     return true;
   }
 
-  const bookingMatch = pathname.match(/^\/api\/admin\/bookings\/([^/]+)$/);
+  const bookingMatch =
+    pathname.match(/^\/api\/admin\/bookings\/([^/]+)$/) ||
+    (pathname === "/api/admin/booking" && adminAction === "booking"
+      ? [pathname, requestUrl.searchParams.get("id")]
+      : null);
   if (request.method === "PATCH" && bookingMatch) {
     const body = await readJsonBody(request);
     const booking = await store.updateBookingStatus(bookingMatch[1], body.status);

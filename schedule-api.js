@@ -31,49 +31,58 @@ class ScheduleApi {
   }
 
   login(login, password) {
-    return this.request("/api/admin/login", {
+    return this.request("/api/admin/auth?action=login", {
       method: "POST",
       body: JSON.stringify({ login, password })
     });
   }
 
   getSession() {
-    return this.request("/api/admin/session");
+    return this.request("/api/admin/auth?action=session");
   }
 
   logout() {
-    return this.request("/api/admin/logout", { method: "POST" });
+    return this.request("/api/admin/auth?action=logout", { method: "POST" });
   }
 
   getAdminSchedule() {
-    return this.request("/api/admin/schedule");
+    return this.request("/api/admin/booking?action=schedule");
   }
 
   createSlot(payload) {
-    return this.request("/api/admin/slots", {
+    return this.request("/api/admin/slot?action=slots", {
       method: "POST",
       body: JSON.stringify(payload)
     });
   }
 
   deleteSlot(slotId) {
-    return this.request(`/api/admin/slots/${encodeURIComponent(slotId)}`, {
+    return this.request(
+      `/api/admin/slot?action=slot&id=${encodeURIComponent(slotId)}`,
+      {
       method: "DELETE"
-    });
+      }
+    );
   }
 
   restoreSlot(slotId) {
-    return this.request(`/api/admin/slots/${encodeURIComponent(slotId)}`, {
+    return this.request(
+      `/api/admin/slot?action=slot&id=${encodeURIComponent(slotId)}`,
+      {
       method: "PATCH",
       body: JSON.stringify({ status: "free" })
-    });
+      }
+    );
   }
 
   updateBookingStatus(bookingId, status) {
-    return this.request(`/api/admin/bookings/${encodeURIComponent(bookingId)}`, {
+    return this.request(
+      `/api/admin/booking?action=booking&id=${encodeURIComponent(bookingId)}`,
+      {
       method: "PATCH",
       body: JSON.stringify({ status })
-    });
+      }
+    );
   }
 
   getEducationCatalog() {
@@ -92,47 +101,59 @@ class ScheduleApi {
   }
 
   getAdminCourses() {
-    return this.request("/api/admin/courses");
+    return this.request("/api/admin/content?action=courses");
   }
 
   createCourse(payload) {
-    return this.request("/api/admin/courses", {
+    return this.request("/api/admin/content?action=courses", {
       method: "POST",
       body: JSON.stringify(payload)
     });
   }
 
   updateCourse(courseId, payload) {
-    return this.request(`/api/admin/courses/${encodeURIComponent(courseId)}`, {
+    return this.request(
+      `/api/admin/content?action=course&id=${encodeURIComponent(courseId)}`,
+      {
       method: "PATCH",
       body: JSON.stringify(payload)
-    });
+      }
+    );
   }
 
   deleteCourse(courseId) {
-    return this.request(`/api/admin/courses/${encodeURIComponent(courseId)}`, {
+    return this.request(
+      `/api/admin/content?action=course&id=${encodeURIComponent(courseId)}`,
+      {
       method: "DELETE"
-    });
+      }
+    );
   }
 
   createLesson(payload) {
-    return this.request("/api/admin/lessons", {
+    return this.request("/api/admin/content?action=lessons", {
       method: "POST",
       body: JSON.stringify(payload)
     });
   }
 
   updateLesson(lessonId, payload) {
-    return this.request(`/api/admin/lessons/${encodeURIComponent(lessonId)}`, {
+    return this.request(
+      `/api/admin/content?action=lesson&id=${encodeURIComponent(lessonId)}`,
+      {
       method: "PATCH",
       body: JSON.stringify(payload)
-    });
+      }
+    );
   }
 
   deleteLesson(lessonId) {
-    return this.request(`/api/admin/lessons/${encodeURIComponent(lessonId)}`, {
+    return this.request(
+      `/api/admin/content?action=lesson&id=${encodeURIComponent(lessonId)}`,
+      {
       method: "DELETE"
-    });
+      }
+    );
   }
 
   moveLesson(lessonId, direction) {
@@ -140,14 +161,14 @@ class ScheduleApi {
   }
 
   requestVideoUpload(payload) {
-    return this.request("/api/admin/video-upload", {
+    return this.request("/api/admin/content?action=video-upload", {
       method: "POST",
       body: JSON.stringify(payload)
     });
   }
 
   grantCourseAccess(userId, courseId) {
-    return this.request("/api/admin/course-access", {
+    return this.request("/api/admin/content?action=course-access", {
       method: "POST",
       body: JSON.stringify({ userId, courseId })
     });

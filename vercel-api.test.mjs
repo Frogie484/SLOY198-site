@@ -1,11 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { ScheduleStore } from "./schedule-store.mjs";
-import loginHandler from "./api/admin/login.js";
-import sessionHandler from "./api/admin/session.js";
-import logoutHandler from "./api/admin/logout.js";
-import scheduleHandler from "./api/admin/schedule.js";
-import slotsAdminHandler from "./api/admin/slots.js";
+import authHandler from "./api/admin/auth.js";
 import slotAdminHandler from "./api/admin/slot.js";
 import bookingAdminHandler from "./api/admin/booking.js";
 import slotsHandler from "./api/slots.js";
@@ -82,16 +78,21 @@ test("Vercel API supports login, schedule management, booking and logout", async
   setScheduleStoreForTests(store);
 
   const denied = await call(
-    scheduleHandler,
-    createRequest({ method: "GET", url: "/api/admin/schedule" })
+    bookingAdminHandler,
+    createRequest({
+      method: "GET",
+      url: "/api/admin/booking?action=schedule",
+      query: { action: "schedule" }
+    })
   );
   assert.equal(denied.statusCode, 401);
 
   const login = await call(
-    loginHandler,
+    authHandler,
     createRequest({
       method: "POST",
-      url: "/api/admin/login",
+      url: "/api/admin/auth?action=login",
+      query: { action: "login" },
       body: { login: "admin", password: "sloy198-change-me" }
     })
   );
@@ -103,17 +104,23 @@ test("Vercel API supports login, schedule management, booking and logout", async
   const cookie = setCookie.split(";")[0];
 
   const session = await call(
-    sessionHandler,
-    createRequest({ method: "GET", url: "/api/admin/session", cookie })
+    authHandler,
+    createRequest({
+      method: "GET",
+      url: "/api/admin/auth?action=session",
+      query: { action: "session" },
+      cookie
+    })
   );
   assert.deepEqual(session.json(), { authenticated: true });
 
   for (const time of ["12:20", "12:30", "12:40", "13:00"]) {
     const created = await call(
-      slotsAdminHandler,
+      slotAdminHandler,
       createRequest({
         method: "POST",
-        url: "/api/admin/slots",
+        url: "/api/admin/slot?action=slots",
+        query: { action: "slots" },
         cookie,
         body: {
           date: "2099-06-14",
@@ -151,8 +158,13 @@ test("Vercel API supports login, schedule management, booking and logout", async
   const bookingId = booked.json().booking.id;
 
   const adminSchedule = await call(
-    scheduleHandler,
-    createRequest({ method: "GET", url: "/api/admin/schedule", cookie })
+    bookingAdminHandler,
+    createRequest({
+      method: "GET",
+      url: "/api/admin/booking?action=schedule",
+      query: { action: "schedule" },
+      cookie
+    })
   );
   assert.deepEqual(
     adminSchedule.json().slots.map((slot) => [slot.time, slot.status]),
@@ -172,8 +184,8 @@ test("Vercel API supports login, schedule management, booking and logout", async
     bookingAdminHandler,
     createRequest({
       method: "PATCH",
-      url: `/api/admin/booking?id=${bookingId}`,
-      query: { id: bookingId },
+      url: `/api/admin/booking?action=booking&id=${bookingId}`,
+      query: { action: "booking", id: bookingId },
       cookie,
       body: { status: "confirmed" }
     })
@@ -185,16 +197,21 @@ test("Vercel API supports login, schedule management, booking and logout", async
     slotAdminHandler,
     createRequest({
       method: "DELETE",
-      url: `/api/admin/slot?id=${freeSlotId}`,
-      query: { id: freeSlotId },
+      url: `/api/admin/slot?action=slot&id=${freeSlotId}`,
+      query: { action: "slot", id: freeSlotId },
       cookie
     })
   );
   assert.equal(deleted.statusCode, 200);
 
   const logout = await call(
-    logoutHandler,
-    createRequest({ method: "POST", url: "/api/admin/logout", cookie })
+    authHandler,
+    createRequest({
+      method: "POST",
+      url: "/api/admin/auth?action=logout",
+      query: { action: "logout" },
+      cookie
+    })
   );
   assert.equal(logout.statusCode, 200);
   assert.match(logout.getHeader("set-cookie"), /Max-Age=0/);

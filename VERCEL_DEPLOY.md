@@ -37,4 +37,7 @@ sloy198-change-me
 4. Выдачу тестового доступа из админки по ID пользователя.
 5. Воспроизведение урока на `/education.html`.
 
+Проект использует 9 публичных Serverless Functions: 4 объединённых admin-handler-а
+и 5 клиентских API endpoint-ов. Это ниже лимита Vercel Hobby в 12 функций.
+
 Локальная команда `npm run dev` продолжает использовать `data/schedule.json`.

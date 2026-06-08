@@ -3,10 +3,9 @@ import test from "node:test";
 import { ScheduleStore } from "./schedule-store.mjs";
 import catalogHandler from "./api/education/catalog.js";
 import testAccessHandler from "./api/education/test-access.js";
-import coursesHandler from "./api/admin/courses.js";
-import lessonsHandler from "./api/admin/lessons.js";
+import contentHandler from "./api/admin/content.js";
 import { setScheduleStoreForTests } from "./server/vercel/store.js";
-import loginHandler from "./api/admin/login.js";
+import authHandler from "./api/admin/auth.js";
 
 class MemoryAdapter {
   constructor() {
@@ -71,16 +70,18 @@ test("education API creates an anonymous identity and grants test access through
   await store.init();
   setScheduleStoreForTests(store);
 
-  const login = await call(loginHandler, request({
+  const login = await call(authHandler, request({
     method: "POST",
-    url: "/api/admin/login",
+    url: "/api/admin/auth?action=login",
+    query: { action: "login" },
     body: { login: "admin", password: "sloy198-change-me" }
   }));
   const adminCookie = login.getHeader("set-cookie").split(";")[0];
 
-  const createdCourse = await call(coursesHandler, request({
+  const createdCourse = await call(contentHandler, request({
     method: "POST",
-    url: "/api/admin/courses",
+    url: "/api/admin/content?action=courses",
+    query: { action: "courses" },
     cookie: adminCookie,
     body: {
       title: "Курс",
@@ -93,9 +94,10 @@ test("education API creates an anonymous identity and grants test access through
   assert.equal(createdCourse.statusCode, 201);
   const course = createdCourse.json().course;
 
-  const lesson = await call(lessonsHandler, request({
+  const lesson = await call(contentHandler, request({
     method: "POST",
-    url: "/api/admin/lessons",
+    url: "/api/admin/content?action=lessons",
+    query: { action: "lessons" },
     cookie: adminCookie,
     body: {
       courseId: course.id,
@@ -105,6 +107,7 @@ test("education API creates an anonymous identity and grants test access through
     }
   }));
   assert.equal(lesson.statusCode, 201);
+  const lessonId = lesson.json().lesson.id;
 
   const catalog = await call(catalogHandler, request({
     url: "/api/education/catalog"
@@ -138,4 +141,46 @@ test("education API creates an anonymous identity and grants test access through
   }));
   assert.equal(disabledInProduction.statusCode, 403);
   delete process.env.VERCEL_ENV;
+
+  const updatedLesson = await call(contentHandler, request({
+    method: "PATCH",
+    url: `/api/admin/content?action=lesson&id=${lessonId}`,
+    query: { action: "lesson", id: lessonId },
+    cookie: adminCookie,
+    body: { title: "Обновлённый урок" }
+  }));
+  assert.equal(updatedLesson.json().lesson.title, "Обновлённый урок");
+
+  const adminAccess = await call(contentHandler, request({
+    method: "POST",
+    url: "/api/admin/content?action=course-access",
+    query: { action: "course-access" },
+    cookie: adminCookie,
+    body: { userId: "admin-test-user", courseId: course.id }
+  }));
+  assert.equal(adminAccess.json().purchase.provider, "admin-test");
+
+  const adminCatalog = await call(contentHandler, request({
+    method: "GET",
+    url: "/api/admin/content?action=courses",
+    query: { action: "courses" },
+    cookie: adminCookie
+  }));
+  assert.equal(adminCatalog.json().courses[0].lessons[0].title, "Обновлённый урок");
+
+  const deletedLesson = await call(contentHandler, request({
+    method: "DELETE",
+    url: `/api/admin/content?action=lesson&id=${lessonId}`,
+    query: { action: "lesson", id: lessonId },
+    cookie: adminCookie
+  }));
+  assert.equal(deletedLesson.statusCode, 200);
+
+  const deletedCourse = await call(contentHandler, request({
+    method: "DELETE",
+    url: `/api/admin/content?action=course&id=${course.id}`,
+    query: { action: "course", id: course.id },
+    cookie: adminCookie
+  }));
+  assert.equal(deletedCourse.statusCode, 200);
 });
