@@ -8,6 +8,12 @@ export const SLOT_STATUSES = ["free", "booked", "unavailable", "cancelled"];
 
 const emptyDatabase = {
   version: 3,
+  storage: {
+    revision: 0,
+    updatedAt: "",
+    mutationId: "",
+    appliedMutationIds: []
+  },
   slots: [],
   bookings: [],
   users: [],
@@ -596,6 +602,14 @@ const deactivateOverlappingSlots = (database, bookedSlot, bookingId) => {
 
 const normalizeDatabase = (database) => {
   database.version = 3;
+  database.storage = {
+    revision: Math.max(0, Number(database.storage?.revision) || 0),
+    updatedAt: String(database.storage?.updatedAt || ""),
+    mutationId: String(database.storage?.mutationId || ""),
+    appliedMutationIds: Array.isArray(database.storage?.appliedMutationIds)
+      ? database.storage.appliedMutationIds.map(String).slice(-50)
+      : []
+  };
   database.slots = Array.isArray(database.slots) ? database.slots : [];
   database.bookings = Array.isArray(database.bookings) ? database.bookings : [];
   database.users = Array.isArray(database.users) ? database.users : [];

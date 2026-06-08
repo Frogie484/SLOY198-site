@@ -1,5 +1,11 @@
 {
   "version": 3,
+  "storage": {
+    "revision": 0,
+    "updatedAt": "",
+    "mutationId": "",
+    "appliedMutationIds": []
+  },
   "slots": [
     {
       "id": "0e38b15e-4454-4ee2-8d09-0b47af9b409c",
