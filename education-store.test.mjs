@@ -32,47 +32,32 @@ const createStore = async () => {
   return store;
 };
 
-test("education catalog exposes only published content and never exposes video paths", async () => {
+test("education catalog exposes published link-based courses with temporary access", async () => {
   const store = await createStore();
-  const draft = await store.createCourse({
+  await store.createCourse({
     title: "Черновик",
-    description: "",
+    shortDescription: "",
+    videoUrl: "https://youtu.be/dQw4w9WgXcQ",
     status: "draft"
   });
   const course = await store.createCourse({
     title: "Основы",
-    description: "Описание",
-    previewImageUrl: "/preview.jpg",
+    shortDescription: "Краткое описание",
+    fullDescription: "Полное описание",
+    coverImageUrl: "https://example.com/preview.jpg",
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     price: 4900,
     status: "published"
-  });
-  await store.createLesson({
-    courseId: draft.id,
-    title: "Скрытый курс",
-    published: true,
-    videoPath: "private/draft.mp4"
-  });
-  await store.createLesson({
-    courseId: course.id,
-    title: "Опубликованный урок",
-    description: "Описание урока",
-    published: true,
-    videoPath: "private/published.mp4"
-  });
-  await store.createLesson({
-    courseId: course.id,
-    title: "Скрытый урок",
-    published: false,
-    videoPath: "private/hidden.mp4"
   });
 
   const catalog = await store.listEducationCatalog("user-1");
   assert.equal(catalog.length, 1);
   assert.equal(catalog[0].id, course.id);
-  assert.equal(catalog[0].hasAccess, false);
-  assert.equal(catalog[0].lessons.length, 1);
-  assert.equal(catalog[0].lessons[0].videoAvailable, true);
-  assert.equal("videoPath" in catalog[0].lessons[0], false);
+  assert.equal(catalog[0].hasAccess, true);
+  assert.equal(catalog[0].shortDescription, "Краткое описание");
+  assert.equal(catalog[0].fullDescription, "Полное описание");
+  assert.equal(catalog[0].coverImageUrl, "https://example.com/preview.jpg");
+  assert.equal(catalog[0].videoUrl, "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
 });
 
 test("paid purchase grants lesson access while lesson order remains editable", async () => {

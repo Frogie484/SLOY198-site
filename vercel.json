@@ -62,10 +62,6 @@
     {
       "source": "/api/admin/course-access",
       "destination": "/api/admin/content?action=course-access"
-    },
-    {
-      "source": "/api/admin/video-upload",
-      "destination": "/api/admin/content?action=video-upload"
     }
   ]
 }

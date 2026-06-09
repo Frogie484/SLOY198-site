@@ -264,27 +264,19 @@ export class ScheduleStore {
 
   async listEducationCatalog(userId = "") {
     const database = await this.read();
-    const accessibleCourseIds = getAccessibleCourseIds(database, userId);
 
     return database.courses
       .filter((course) => course.status === "published")
       .sort(compareCreated)
-      .map((course) => ({
-        ...course,
-        hasAccess: accessibleCourseIds.has(course.id),
-        lessons: database.lessons
-          .filter((lesson) => lesson.courseId === course.id && lesson.published)
-          .sort(compareLessons)
-          .map((lesson) => ({
-            id: lesson.id,
-            title: lesson.title,
-            description: lesson.description,
-            createdAt: lesson.createdAt,
-            order: lesson.order,
-            published: lesson.published,
-            videoAvailable: Boolean(lesson.videoPath)
-          }))
-      }));
+      .map((course) => {
+        // Replace this temporary flag with a paid purchase check when ЮKassa is connected.
+        const hasAccess = true;
+        return {
+          ...course,
+          videoUrl: hasAccess ? course.videoUrl : "",
+          hasAccess
+        };
+      });
   }
 
   async listAdminCourses() {
@@ -306,8 +298,10 @@ export class ScheduleStore {
       const course = {
         id: randomUUID(),
         title: input.title,
-        description: input.description || "",
-        previewImageUrl: input.previewImageUrl || "",
+        shortDescription: input.shortDescription || "",
+        fullDescription: input.fullDescription || "",
+        coverImageUrl: input.coverImageUrl || "",
+        videoUrl: input.videoUrl || "",
         price: Number(input.price) || 0,
         status: input.status === "published" ? "published" : "draft",
         createdAt: now,
@@ -325,7 +319,13 @@ export class ScheduleStore {
         throw createStoreError("Курс не найден.", 404);
       }
 
-      for (const field of ["title", "description", "previewImageUrl"]) {
+      for (const field of [
+        "title",
+        "shortDescription",
+        "fullDescription",
+        "coverImageUrl",
+        "videoUrl"
+      ]) {
         if (input[field] !== undefined) {
           course[field] = String(input[field]).trim();
         }
@@ -639,8 +639,12 @@ const normalizeDatabase = (database) => {
   });
 
   database.courses.forEach((course) => {
-    course.description = course.description || "";
-    course.previewImageUrl = course.previewImageUrl || "";
+    course.shortDescription = course.shortDescription || course.description || "";
+    course.fullDescription = course.fullDescription || "";
+    course.coverImageUrl = course.coverImageUrl || course.previewImageUrl || "";
+    course.videoUrl = course.videoUrl || "";
+    delete course.description;
+    delete course.previewImageUrl;
     course.price = Number(course.price) || 0;
     course.status = course.status === "published" ? "published" : "draft";
     course.createdAt = course.createdAt || new Date().toISOString();

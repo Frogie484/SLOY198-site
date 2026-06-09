@@ -7,7 +7,6 @@ import { extname, join, normalize, resolve, sep } from "node:path";
 import { ScheduleStore } from "./schedule-store.mjs";
 import {
   createPrivateVideoPlayback,
-  createPrivateVideoUpload,
   deletePrivateVideos
 } from "./server/vercel/education-media.js";
 import {
@@ -385,22 +384,6 @@ const handleApiRequest = async (request, response, pathname) => {
     const deleted = await store.deleteLesson(lessonMatch[1]);
     await deletePrivateVideos(deleted.videoPath);
     sendJson(response, 200, deleted);
-    return true;
-  }
-
-  if (
-    request.method === "POST" &&
-    (pathname === "/api/admin/video-upload" ||
-      (pathname === "/api/admin/content" && adminAction === "video-upload"))
-  ) {
-    const body = await readJsonBody(request);
-    const lessonId = String(body.lessonId || "").trim();
-    const courses = await store.listAdminCourses();
-    if (!courses.some((course) => course.lessons.some((lesson) => lesson.id === lessonId))) {
-      sendJson(response, 404, { error: "Урок не найден." });
-      return true;
-    }
-    sendJson(response, 200, await createPrivateVideoUpload(lessonId, body));
     return true;
   }
 

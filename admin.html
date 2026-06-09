@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Панель управления — SLOY198</title>
-  <link rel="stylesheet" href="admin.css?v=20260608-1">
+  <link rel="stylesheet" href="admin.css?v=20260609-1">
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -114,10 +114,12 @@
           </div>
           <form class="course-form" data-course-form>
             <input name="courseId" type="hidden">
-            <label><span>Название</span><input name="title" type="text" required></label>
+            <label><span>Название курса</span><input name="title" type="text" required></label>
             <label><span>Стоимость, ₽</span><input name="price" type="number" min="0" step="1" value="0"></label>
-            <label class="admin-field--wide"><span>Описание</span><textarea name="description" rows="4"></textarea></label>
-            <label class="admin-field--wide"><span>Ссылка на превью</span><input name="previewImageUrl" type="url" placeholder="https://..."></label>
+            <label class="admin-field--wide"><span>Краткое описание</span><textarea name="shortDescription" rows="3"></textarea></label>
+            <label class="admin-field--wide"><span>Полное описание</span><textarea name="fullDescription" rows="6"></textarea></label>
+            <label class="admin-field--wide"><span>Обложка курса</span><input name="coverImageUrl" type="url" placeholder="https://example.com/cover.jpg"></label>
+            <label class="admin-field--wide"><span>Ссылка на видео YouTube или Vimeo</span><input name="videoUrl" type="url" placeholder="https://www.youtube.com/watch?v=..."></label>
             <label>
               <span>Статус</span>
               <select name="status">
@@ -131,23 +133,10 @@
         </section>
 
         <section class="admin-panel">
-          <div class="admin-panel__heading">
-            <p class="admin-kicker">Доступ для разработки</p>
-            <h2>Выдать тестовый доступ</h2>
-          </div>
-          <form class="access-form" data-access-form>
-            <label><span>ID пользователя</span><input name="userId" type="text" required placeholder="ID отображается на странице обучения"></label>
-            <label><span>Курс</span><select name="courseId" data-access-course required></select></label>
-            <button class="admin-button admin-button--primary" type="submit">Выдать тестовый доступ</button>
-          </form>
-          <p class="admin-message" data-access-message aria-live="polite"></p>
-        </section>
-
-        <section class="admin-panel">
           <div class="admin-panel__heading admin-panel__heading--row">
             <div>
-              <p class="admin-kicker">Курсы и уроки</p>
-              <h2>Управление обучением</h2>
+              <p class="admin-kicker">Видеокурсы</p>
+              <h2>Созданные курсы</h2>
             </div>
             <button class="admin-button admin-button--quiet" type="button" data-education-refresh>Обновить</button>
           </div>
@@ -158,7 +147,7 @@
       </div>
     </section>
   </main>
-  <script src="schedule-api.js?v=20260608-1"></script>
-  <script src="admin.js?v=20260608-1"></script>
+  <script src="schedule-api.js?v=20260609-1"></script>
+  <script src="admin.js?v=20260609-1"></script>
 </body>
 </html>

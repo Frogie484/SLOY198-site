@@ -1,7 +1,4 @@
-import {
-  createPrivateVideoUpload,
-  deletePrivateVideos
-} from "../../server/vercel/education-media.js";
+import { deletePrivateVideos } from "../../server/vercel/education-media.js";
 import {
   validateCourse,
   validateLesson
@@ -100,20 +97,6 @@ export default createApiHandler(["GET", "POST", "PATCH", "DELETE"], async (reque
     }
     const purchase = await store.grantCourseAccess(userId, courseId, "admin-test");
     sendJson(response, 200, { purchase });
-    return;
-  }
-
-  if (action === "video-upload" && request.method === "POST") {
-    const body = await readJsonBody(request);
-    const lessonId = String(body.lessonId || "").trim();
-    if (!lessonId) {
-      throw createHttpError("Не указан урок.", 400);
-    }
-    const courses = await store.listAdminCourses();
-    if (!courses.some((course) => course.lessons.some((lesson) => lesson.id === lessonId))) {
-      throw createHttpError("Урок не найден.", 404);
-    }
-    sendJson(response, 200, await createPrivateVideoUpload(lessonId, body));
     return;
   }
 

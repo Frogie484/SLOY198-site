@@ -363,9 +363,19 @@ button {
 }
 
 .admin-course {
+  overflow: hidden;
   padding: clamp(20px, 3vw, 30px);
   border: 1px solid rgba(246, 244, 237, 0.14);
   background: rgba(5, 22, 30, 0.76);
+}
+
+.admin-course__cover {
+  display: block;
+  width: calc(100% + 60px);
+  max-width: none;
+  height: clamp(180px, 28vw, 320px);
+  margin: -30px -30px 26px;
+  object-fit: cover;
 }
 
 .admin-course__head {
@@ -392,6 +402,23 @@ button {
   margin: 10px 0 0;
   color: var(--admin-muted);
   line-height: 1.6;
+}
+
+.admin-course__head .admin-course__meta {
+  color: var(--admin-gold);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-course__full-description {
+  max-width: 860px;
+  margin: 24px 0 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--admin-border);
+  color: var(--admin-muted);
+  line-height: 1.7;
+  white-space: pre-line;
 }
 
 .admin-lesson {
@@ -448,30 +475,6 @@ button {
   margin-top: 22px;
   padding-top: 22px;
   border-top: 1px solid var(--admin-border);
-}
-
-.admin-video-upload {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
-  margin-top: 14px;
-}
-
-.admin-video-upload input {
-  min-width: 0;
-  color: var(--admin-muted);
-  font-size: 12px;
-}
-
-.admin-video-upload input::file-selector-button {
-  min-height: 38px;
-  margin-right: 12px;
-  padding: 8px 12px;
-  border: 1px solid var(--admin-border);
-  background: transparent;
-  color: var(--admin-text);
-  cursor: pointer;
 }
 
 .admin-education-actions {
@@ -647,6 +650,11 @@ button {
     flex-direction: column;
   }
 
+  .admin-course__cover {
+    width: calc(100% + 40px);
+    margin: -20px -20px 22px;
+  }
+
   .admin-education-actions {
     justify-content: flex-start;
   }
@@ -668,8 +676,7 @@ button {
   .course-form,
   .access-form,
   .lesson-edit-form,
-  .lesson-create-form,
-  .admin-video-upload {
+  .lesson-create-form {
     grid-template-columns: 1fr;
   }
 

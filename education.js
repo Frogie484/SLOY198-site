@@ -1,12 +1,5 @@
 const educationApi = window.SLOY198ScheduleApi;
 const catalogElement = document.querySelector("[data-course-catalog]");
-const identityElement = document.querySelector("[data-education-identity]");
-const userIdElement = document.querySelector("[data-education-user-id]");
-const playerSection = document.querySelector("[data-player-section]");
-const player = document.querySelector("[data-course-player]");
-const playerTitle = document.querySelector("[data-player-title]");
-const playerDescription = document.querySelector("[data-player-description]");
-const playerStatus = document.querySelector("[data-player-status]");
 
 const formatPrice = (price) =>
   price > 0
@@ -31,7 +24,7 @@ const getEmbedUrl = (value) => {
     return "";
   }
   try {
-    const url = new URL(value, window.location.origin);
+    const url = new URL(value);
     const host = url.hostname.replace(/^www\./, "");
     if (host === "youtu.be") {
       const videoId = url.pathname.slice(1);
@@ -49,9 +42,11 @@ const getEmbedUrl = (value) => {
     }
     if (host === "vimeo.com" || host === "player.vimeo.com") {
       const videoId = url.pathname.split("/").filter(Boolean).pop();
-      return /^\d+$/.test(videoId || "") ? `https://player.vimeo.com/video/${videoId}` : "";
+      return /^\d+$/.test(videoId || "")
+        ? `https://player.vimeo.com/video/${videoId}`
+        : "";
     }
-  } catch (error) {
+  } catch {
     return "";
   }
   return "";
@@ -59,80 +54,52 @@ const getEmbedUrl = (value) => {
 
 const createCourseMedia = (course) => {
   const media = createElement("div", "education-course__media");
-  const externalVideo = getEmbedUrl(
-    course.videoUrl || course.previewVideoUrl || course.previewImageUrl
-  );
-  const availableVideos = course.lessons.filter((lesson) => lesson.videoAvailable).length;
+  const embedUrl = course.hasAccess ? getEmbedUrl(course.videoUrl) : "";
 
-  if (externalVideo) {
+  if (embedUrl) {
     const frame = document.createElement("iframe");
-    frame.src = externalVideo;
-    frame.title = `Превью курса «${course.title}»`;
+    frame.src = embedUrl;
+    frame.title = `Видеокурс «${course.title}»`;
     frame.loading = "lazy";
     frame.referrerPolicy = "strict-origin-when-cross-origin";
     frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
     frame.allowFullscreen = true;
+    frame.dataset.courseFrame = course.id;
     media.append(frame);
-    return media;
+    return { media, hasVideo: true };
   }
 
-  if (course.previewImageUrl && !getEmbedUrl(course.previewImageUrl)) {
+  if (course.coverImageUrl) {
     const image = document.createElement("img");
-    image.src = course.previewImageUrl;
-    image.alt = `Превью курса «${course.title}»`;
+    image.src = course.coverImageUrl;
+    image.alt = `Обложка курса «${course.title}»`;
     image.loading = "lazy";
     image.addEventListener("error", () => image.remove(), { once: true });
     media.append(image);
   }
 
-  const state = createElement(
-    "span",
-    "education-course__media-state",
-    availableVideos > 0
-      ? `Видеоуроков в программе · ${availableVideos}`
-      : "Видео пока не добавлено"
+  media.append(
+    createElement(
+      "span",
+      "education-course__media-state",
+      course.hasAccess ? "Видео пока не добавлено" : "Доступ к видео закрыт"
+    )
   );
-  media.append(state);
-  return media;
+  return { media, hasVideo: false };
 };
 
-const createLesson = (lesson, course) => {
-  const item = createElement("li", "education-course__lesson");
-  const number = createElement(
-    "span",
-    "education-course__lesson-number",
-    String(lesson.order).padStart(2, "0")
-  );
-  const copy = createElement("div", "education-course__lesson-copy");
-  copy.append(
-    createElement("strong", "", lesson.title),
-    createElement("p", "", lesson.description || "Описание урока скоро появится.")
-  );
-  const action = createElement(
-    "button",
-    "education-course__lesson-action",
-    course.hasAccess ? (lesson.videoAvailable ? "Смотреть" : "Видео готовится") : "Закрыто"
-  );
-  action.type = "button";
-  action.disabled = !course.hasAccess || !lesson.videoAvailable;
-  if (!action.disabled) {
-    action.dataset.lessonId = lesson.id;
-    action.dataset.lessonTitle = lesson.title;
-    action.dataset.lessonDescription = lesson.description || "";
-  }
-  item.append(number, copy, action);
-  return item;
-};
-
-const createCourseCard = (course, index, testAccessEnabled) => {
+const createCourseCard = (course, index) => {
   const article = createElement("article", "education-course");
+  const { media, hasVideo } = createCourseMedia(course);
   const content = createElement("div", "education-course__content");
   const meta = createElement("div", "education-course__meta");
   meta.append(
     createElement(
       "span",
       "education-course__access",
-      course.hasAccess ? "Доступ открыт" : `Видеокурс · ${String(index + 1).padStart(2, "0")}`
+      course.hasAccess
+        ? `Доступ открыт · ${String(index + 1).padStart(2, "0")}`
+        : `Видеокурс · ${String(index + 1).padStart(2, "0")}`
     ),
     createElement("strong", "education-course__price", formatPrice(course.price))
   );
@@ -142,36 +109,22 @@ const createCourseCard = (course, index, testAccessEnabled) => {
     createElement(
       "p",
       "education-course__description",
-      course.description || "Описание курса скоро появится."
+      course.shortDescription || "Краткое описание курса скоро появится."
     )
   );
 
-  const lessonsTitle = createElement(
-    "p",
-    "education-course__lessons-title",
-    `Уроки · ${course.lessons.length}`
-  );
-  const lessons = createElement("ol", "education-course__lessons");
-  course.lessons.forEach((lesson) => lessons.append(createLesson(lesson, course)));
-  content.append(lessonsTitle, lessons);
+  if (course.fullDescription) {
+    content.append(
+      createElement("p", "education-course__full-description", course.fullDescription)
+    );
+  }
 
   const actions = createElement("div", "education-course__actions");
-  const firstAvailableLesson = course.lessons.find((lesson) => lesson.videoAvailable);
-  if (course.hasAccess && firstAvailableLesson) {
+  if (course.hasAccess && hasVideo) {
     const watchButton = createElement("button", "button", "Смотреть курс");
     watchButton.type = "button";
-    watchButton.dataset.lessonId = firstAvailableLesson.id;
-    watchButton.dataset.lessonTitle = firstAvailableLesson.title;
-    watchButton.dataset.lessonDescription = firstAvailableLesson.description || "";
+    watchButton.dataset.focusCourse = course.id;
     actions.append(watchButton);
-  } else if (!course.hasAccess && testAccessEnabled) {
-    const testButton = createElement("button", "button", "Получить тестовый доступ");
-    testButton.type = "button";
-    testButton.dataset.testAccess = course.id;
-    actions.append(
-      testButton,
-      createElement("small", "", "Режим разработки до подключения ЮKassa")
-    );
   } else if (!course.hasAccess) {
     const accessLink = createElement("a", "button", "Получить доступ");
     accessLink.href = "consultation.html#request";
@@ -184,13 +137,11 @@ const createCourseCard = (course, index, testAccessEnabled) => {
   }
 
   content.append(actions);
-  article.append(createCourseMedia(course), content);
+  article.append(media, content);
   return article;
 };
 
-const renderCatalog = ({ userId, courses, testAccessEnabled }) => {
-  userIdElement.textContent = userId;
-  identityElement.hidden = !testAccessEnabled;
+const renderCatalog = ({ courses }) => {
   catalogElement.replaceChildren();
   if (courses.length === 0) {
     catalogElement.append(
@@ -199,14 +150,14 @@ const renderCatalog = ({ userId, courses, testAccessEnabled }) => {
     return;
   }
   courses.forEach((course, index) => {
-    catalogElement.append(createCourseCard(course, index, testAccessEnabled));
+    catalogElement.append(createCourseCard(course, index));
   });
 };
 
 const loadCatalog = async () => {
   try {
     renderCatalog(await educationApi.getEducationCatalog());
-  } catch (error) {
+  } catch {
     catalogElement.replaceChildren(
       createElement(
         "p",
@@ -217,45 +168,16 @@ const loadCatalog = async () => {
   }
 };
 
-catalogElement.addEventListener("click", async (event) => {
-  const accessButton = event.target.closest("[data-test-access]");
-  if (accessButton) {
-    accessButton.disabled = true;
-    accessButton.textContent = "Открываем доступ...";
-    try {
-      await educationApi.grantOwnTestAccess(accessButton.dataset.testAccess);
-      await loadCatalog();
-    } catch (error) {
-      accessButton.disabled = false;
-      accessButton.textContent = "Не удалось открыть доступ";
-    }
+catalogElement.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-focus-course]");
+  if (!button) {
     return;
   }
-
-  const lessonButton = event.target.closest("[data-lesson-id]");
-  if (!lessonButton) {
-    return;
-  }
-  lessonButton.disabled = true;
-  playerStatus.textContent = "Подготавливаем защищённое видео...";
-  playerSection.hidden = false;
-  playerTitle.textContent = lessonButton.dataset.lessonTitle;
-  playerDescription.textContent =
-    lessonButton.dataset.lessonDescription || "Описание урока скоро появится.";
-  player.removeAttribute("src");
-  player.load();
-  playerSection.scrollIntoView({ behavior: "smooth", block: "start" });
-
-  try {
-    const { url } = await educationApi.getLessonVideo(lessonButton.dataset.lessonId);
-    player.src = url;
-    playerStatus.textContent = "";
-    await player.play().catch(() => {});
-  } catch (error) {
-    playerStatus.textContent = error.message;
-  } finally {
-    lessonButton.disabled = false;
-  }
+  const frame = catalogElement.querySelector(
+    `[data-course-frame="${CSS.escape(button.dataset.focusCourse)}"]`
+  );
+  frame?.scrollIntoView({ behavior: "smooth", block: "center" });
+  frame?.focus({ preventScroll: true });
 });
 
 loadCatalog();

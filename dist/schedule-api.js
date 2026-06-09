@@ -160,13 +160,6 @@ class ScheduleApi {
     return this.updateLesson(lessonId, { direction });
   }
 
-  requestVideoUpload(payload) {
-    return this.request("/api/admin/content?action=video-upload", {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
-  }
-
   grantCourseAccess(userId, courseId) {
     return this.request("/api/admin/content?action=course-access", {
       method: "POST",
