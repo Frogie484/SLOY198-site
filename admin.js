@@ -202,7 +202,7 @@ const renderCourse = (course) => {
   const copy = document.createElement("div");
   const kicker = document.createElement("p");
   kicker.className = "admin-kicker";
-  kicker.textContent = course.status === "published" ? "Опубликован" : "Черновик";
+  kicker.textContent = course.status === "published" ? "Опубликован" : "Скрыт";
   const title = document.createElement("h3");
   title.textContent = course.title;
   const description = document.createElement("p");

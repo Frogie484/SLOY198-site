@@ -1154,6 +1154,20 @@ img {
   object-fit: cover;
 }
 
+.education-course__media::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(3, 14, 21, 0.86));
+  content: "";
+  pointer-events: none;
+}
+
+.education-course--watching .education-course__media::before,
+.education-course--watching .education-course__media::after {
+  display: none;
+}
+
 .education-course__media-state {
   position: absolute;
   z-index: 3;
@@ -1307,8 +1321,16 @@ img {
 }
 
 .education-course__actions small {
+  flex-basis: 100%;
   color: rgba(248, 247, 242, 0.48);
   font-size: 9px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+}
+
+.education-course__test-access {
+  background: transparent;
+  box-shadow: none;
 }
 
 .education-course__actions .button:disabled {

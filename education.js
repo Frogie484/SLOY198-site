@@ -54,20 +54,6 @@ const getEmbedUrl = (value) => {
 
 const createCourseMedia = (course) => {
   const media = createElement("div", "education-course__media");
-  const embedUrl = course.hasAccess ? getEmbedUrl(course.videoUrl) : "";
-
-  if (embedUrl) {
-    const frame = document.createElement("iframe");
-    frame.src = embedUrl;
-    frame.title = `Видеокурс «${course.title}»`;
-    frame.loading = "lazy";
-    frame.referrerPolicy = "strict-origin-when-cross-origin";
-    frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
-    frame.allowFullscreen = true;
-    frame.dataset.courseFrame = course.id;
-    media.append(frame);
-    return { media, hasVideo: true };
-  }
 
   if (course.coverImageUrl) {
     const image = document.createElement("img");
@@ -82,15 +68,35 @@ const createCourseMedia = (course) => {
     createElement(
       "span",
       "education-course__media-state",
-      course.hasAccess ? "Видео пока не добавлено" : "Доступ к видео закрыт"
+      course.hasAccess ? "Курс доступен для просмотра" : "Видео откроется после покупки"
     )
   );
-  return { media, hasVideo: false };
+  return media;
 };
 
-const createCourseCard = (course, index) => {
+const openCourseVideo = (course, article) => {
+  const embedUrl = getEmbedUrl(course.videoUrl);
+  const media = article.querySelector(".education-course__media");
+  if (!embedUrl || !media) {
+    return false;
+  }
+
+  const frame = document.createElement("iframe");
+  frame.src = embedUrl;
+  frame.title = `Видеокурс «${course.title}»`;
+  frame.loading = "lazy";
+  frame.referrerPolicy = "strict-origin-when-cross-origin";
+  frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+  frame.allowFullscreen = true;
+  media.replaceChildren(frame);
+  article.classList.add("education-course--watching");
+  frame.scrollIntoView({ behavior: "smooth", block: "center" });
+  return true;
+};
+
+const createCourseCard = (course, index, testAccessEnabled) => {
   const article = createElement("article", "education-course");
-  const { media, hasVideo } = createCourseMedia(course);
+  const media = createCourseMedia(course);
   const content = createElement("div", "education-course__content");
   const meta = createElement("div", "education-course__meta");
   meta.append(
@@ -120,28 +126,60 @@ const createCourseCard = (course, index) => {
   }
 
   const actions = createElement("div", "education-course__actions");
-  if (course.hasAccess && hasVideo) {
+  const actionStatus = createElement("small", "education-course__action-status");
+  actionStatus.setAttribute("aria-live", "polite");
+
+  if (course.hasAccess && getEmbedUrl(course.videoUrl)) {
     const watchButton = createElement("button", "button", "Смотреть курс");
     watchButton.type = "button";
-    watchButton.dataset.focusCourse = course.id;
+    watchButton.addEventListener("click", () => {
+      if (openCourseVideo(course, article)) {
+        watchButton.remove();
+      }
+    });
     actions.append(watchButton);
-  } else if (!course.hasAccess) {
-    const accessLink = createElement("a", "button", "Получить доступ");
-    accessLink.href = "consultation.html#request";
-    actions.append(accessLink);
-  } else {
+  } else if (course.hasAccess) {
     const unavailableButton = createElement("button", "button", "Видео пока не добавлено");
     unavailableButton.type = "button";
     unavailableButton.disabled = true;
     actions.append(unavailableButton);
+  } else {
+    const buyButton = createElement("button", "button", "Купить");
+    buyButton.type = "button";
+    buyButton.addEventListener("click", () => {
+      actionStatus.textContent = "Оплата скоро будет доступна.";
+    });
+    actions.append(buyButton);
+
+    if (testAccessEnabled) {
+      const testButton = createElement(
+        "button",
+        "button button--ghost education-course__test-access",
+        "Открыть доступ тестово"
+      );
+      testButton.type = "button";
+      testButton.addEventListener("click", async () => {
+        testButton.disabled = true;
+        actionStatus.textContent = "Открываем тестовый доступ...";
+        try {
+          await educationApi.grantOwnTestAccess(course.id);
+          await loadCatalog();
+        } catch (error) {
+          actionStatus.textContent = error.message;
+          testButton.disabled = false;
+        }
+      });
+      actions.append(testButton);
+    }
   }
 
+  actions.append(actionStatus);
   content.append(actions);
   article.append(media, content);
   return article;
 };
 
-const renderCatalog = ({ courses }) => {
+const renderCatalog = ({ courses, testAccessEnabled = false }) => {
   catalogElement.replaceChildren();
   if (courses.length === 0) {
     catalogElement.append(
@@ -150,7 +188,7 @@ const renderCatalog = ({ courses }) => {
     return;
   }
   courses.forEach((course, index) => {
-    catalogElement.append(createCourseCard(course, index));
+    catalogElement.append(createCourseCard(course, index, testAccessEnabled));
   });
 };
 
@@ -167,17 +205,5 @@ const loadCatalog = async () => {
     );
   }
 };
-
-catalogElement.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-focus-course]");
-  if (!button) {
-    return;
-  }
-  const frame = catalogElement.querySelector(
-    `[data-course-frame="${CSS.escape(button.dataset.focusCourse)}"]`
-  );
-  frame?.scrollIntoView({ behavior: "smooth", block: "center" });
-  frame?.focus({ preventScroll: true });
-});
 
 loadCatalog();

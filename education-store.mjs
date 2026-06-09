@@ -50,16 +50,37 @@ export class EducationStore {
     return mutation;
   }
 
-  async listCatalog() {
+  async listCatalog(userId = "") {
     const database = await this.read();
+    const accessibleCourseIds = new Set(
+      database.purchases
+        .filter(
+          (purchase) =>
+            purchase.userId === userId &&
+            purchase.status === "paid"
+        )
+        .map((purchase) => purchase.courseId)
+    );
+
     return database.courses
       .filter((course) => course.status === "published")
       .sort(compareCreated)
-      .map((course) => ({
-        ...course,
-        // Replace this temporary flag with a paid purchase check when ЮKassa is connected.
-        hasAccess: true
-      }));
+      .map((course) => {
+        const hasAccess = accessibleCourseIds.has(course.id);
+        return {
+          id: course.id,
+          title: course.title,
+          shortDescription: course.shortDescription,
+          fullDescription: course.fullDescription,
+          coverImageUrl: course.coverImageUrl,
+          price: course.price,
+          status: course.status,
+          createdAt: course.createdAt,
+          updatedAt: course.updatedAt,
+          hasAccess,
+          ...(hasAccess ? { videoUrl: course.videoUrl } : {})
+        };
+      });
   }
 
   async listAdminCourses() {

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { EducationStore } from "./education-store.mjs";
 import catalogHandler from "./api/education/catalog.js";
+import testAccessHandler from "./api/education/test-access.js";
 import educationAdminHandler from "./api/admin/education.js";
 import { setEducationStoreForTests } from "./server/vercel/education-store.js";
 import authHandler from "./api/admin/auth.js";
@@ -57,7 +58,7 @@ const call = async (handler, input) => {
   return output;
 };
 
-test("education API supports link-based course CRUD and temporary public access", async () => {
+test("education API protects video until test access is granted", async () => {
   process.env.VERCEL = "1";
   process.env.VERCEL_ENV = "preview";
   const store = new EducationStore(new MemoryAdapter());
@@ -94,13 +95,44 @@ test("education API supports link-based course CRUD and temporary public access"
     url: "/api/education/catalog"
   }));
   assert.equal(catalog.statusCode, 200);
-  assert.equal(catalog.json().courses[0].hasAccess, true);
-  assert.equal(
-    catalog.json().courses[0].videoUrl,
-    "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-  );
+  assert.equal(catalog.json().testAccessEnabled, true);
+  assert.equal(catalog.json().courses[0].hasAccess, false);
+  assert.equal("videoUrl" in catalog.json().courses[0], false);
   const clientCookie = catalog.getHeader("set-cookie").split(";")[0];
   assert.match(clientCookie, /sloy198_education_user=/);
+
+  const testAccess = await call(testAccessHandler, request({
+    method: "POST",
+    url: "/api/education/test-access",
+    cookie: clientCookie,
+    body: { courseId: course.id }
+  }));
+  assert.equal(testAccess.statusCode, 200);
+
+  const purchasedCatalog = await call(catalogHandler, request({
+    url: "/api/education/catalog",
+    cookie: clientCookie
+  }));
+  assert.equal(purchasedCatalog.json().courses[0].hasAccess, true);
+  assert.equal(
+    purchasedCatalog.json().courses[0].videoUrl,
+    "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  );
+
+  process.env.VERCEL_ENV = "production";
+  const productionCatalog = await call(catalogHandler, request({
+    url: "/api/education/catalog",
+    cookie: clientCookie
+  }));
+  assert.equal(productionCatalog.json().testAccessEnabled, false);
+  const disabledTestAccess = await call(testAccessHandler, request({
+    method: "POST",
+    url: "/api/education/test-access",
+    cookie: clientCookie,
+    body: { courseId: course.id }
+  }));
+  assert.equal(disabledTestAccess.statusCode, 403);
+  process.env.VERCEL_ENV = "preview";
 
   const updatedCourse = await call(educationAdminHandler, request({
     method: "PATCH",

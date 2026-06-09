@@ -28,7 +28,7 @@ const createEducationStore = async () => {
   return store;
 };
 
-test("education catalog exposes published link-based courses with temporary access", async () => {
+test("education catalog hides video until the current user has access", async () => {
   const store = await createEducationStore();
   await store.createCourse({
     title: "Черновик",
@@ -46,14 +46,26 @@ test("education catalog exposes published link-based courses with temporary acce
     status: "published"
   });
 
-  const catalog = await store.listCatalog();
+  const catalog = await store.listCatalog("user-1");
   assert.equal(catalog.length, 1);
   assert.equal(catalog[0].id, course.id);
-  assert.equal(catalog[0].hasAccess, true);
+  assert.equal(catalog[0].hasAccess, false);
   assert.equal(catalog[0].shortDescription, "Краткое описание");
   assert.equal(catalog[0].fullDescription, "Полное описание");
   assert.equal(catalog[0].coverImageUrl, "https://example.com/preview.jpg");
-  assert.equal(catalog[0].videoUrl, "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+  assert.equal("videoUrl" in catalog[0], false);
+
+  await store.grantCourseAccess("user-1", course.id, "test");
+  const purchasedCatalog = await store.listCatalog("user-1");
+  assert.equal(purchasedCatalog[0].hasAccess, true);
+  assert.equal(
+    purchasedCatalog[0].videoUrl,
+    "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  );
+
+  const otherUserCatalog = await store.listCatalog("user-2");
+  assert.equal(otherUserCatalog[0].hasAccess, false);
+  assert.equal("videoUrl" in otherUserCatalog[0], false);
 });
 
 test("paid purchase grants lesson access while lesson order remains editable", async () => {

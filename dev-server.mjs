@@ -194,7 +194,8 @@ const handleApiRequest = async (request, response, pathname) => {
     const identity = ensureEducationIdentity(request);
     sendJson(response, 200, {
       userId: identity.user.id,
-      courses: await educationStore.listCatalog()
+      testAccessEnabled: isPublicTestAccessEnabled(),
+      courses: await educationStore.listCatalog(identity.user.id)
     }, identity.cookie ? { "Set-Cookie": identity.cookie } : {});
     return true;
   }
