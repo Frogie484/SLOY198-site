@@ -1,6 +1,5 @@
 import { deletePrivateVideos } from "../../server/vercel/education-media.js";
 import {
-  validateCourse,
   validateLesson
 } from "../../server/vercel/education-validation.js";
 import {
@@ -11,40 +10,11 @@ import {
   sendJson
 } from "../../server/vercel/http.js";
 import { getScheduleStore } from "../../server/vercel/store.js";
+import { getEducationStore } from "../../server/vercel/education-store.js";
 
 export default createApiHandler(["GET", "POST", "PATCH", "DELETE"], async (request, response) => {
   const action = getAction(request);
-  const store = await getScheduleStore();
-
-  if (action === "courses") {
-    if (request.method === "GET") {
-      sendJson(response, 200, { courses: await store.listAdminCourses() });
-      return;
-    }
-    if (request.method === "POST") {
-      const course = await store.createCourse(validateCourse(await readJsonBody(request)));
-      sendJson(response, 201, { course });
-      return;
-    }
-  }
-
-  if (action === "course") {
-    const courseId = requireId(request, "Не указан курс.");
-    if (request.method === "PATCH") {
-      const course = await store.updateCourse(
-        courseId,
-        validateCourse(await readJsonBody(request), true)
-      );
-      sendJson(response, 200, { course });
-      return;
-    }
-    if (request.method === "DELETE") {
-      const deleted = await store.deleteCourse(courseId);
-      await deletePrivateVideos(deleted.videoPaths);
-      sendJson(response, 200, deleted);
-      return;
-    }
-  }
+  const store = action === "course-access" ? null : await getScheduleStore();
 
   if (action === "lessons" && request.method === "POST") {
     const lesson = await store.createLesson(validateLesson(await readJsonBody(request)));
@@ -95,7 +65,12 @@ export default createApiHandler(["GET", "POST", "PATCH", "DELETE"], async (reque
     if (!userId || !courseId) {
       throw createHttpError("Укажите ID пользователя и курс.", 400);
     }
-    const purchase = await store.grantCourseAccess(userId, courseId, "admin-test");
+    const educationStore = await getEducationStore();
+    const purchase = await educationStore.grantCourseAccess(
+      userId,
+      courseId,
+      "admin-test"
+    );
     sendJson(response, 200, { purchase });
     return;
   }

@@ -1,21 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ScheduleStore } from "./schedule-store.mjs";
+import { EducationStore } from "./education-store.mjs";
 import catalogHandler from "./api/education/catalog.js";
-import contentHandler from "./api/admin/content.js";
-import { setScheduleStoreForTests } from "./server/vercel/store.js";
+import educationAdminHandler from "./api/admin/education.js";
+import { setEducationStoreForTests } from "./server/vercel/education-store.js";
 import authHandler from "./api/admin/auth.js";
 
 class MemoryAdapter {
   constructor() {
     this.database = {
-      version: 3,
-      slots: [],
-      bookings: [],
-      users: [],
-      purchases: [],
-      courses: [],
-      lessons: []
+      version: 1,
+      courses: []
     };
   }
 
@@ -65,9 +60,9 @@ const call = async (handler, input) => {
 test("education API supports link-based course CRUD and temporary public access", async () => {
   process.env.VERCEL = "1";
   process.env.VERCEL_ENV = "preview";
-  const store = new ScheduleStore(new MemoryAdapter());
+  const store = new EducationStore(new MemoryAdapter());
   await store.init();
-  setScheduleStoreForTests(store);
+  setEducationStoreForTests(store);
 
   const login = await call(authHandler, request({
     method: "POST",
@@ -77,9 +72,9 @@ test("education API supports link-based course CRUD and temporary public access"
   }));
   const adminCookie = login.getHeader("set-cookie").split(";")[0];
 
-  const createdCourse = await call(contentHandler, request({
+  const createdCourse = await call(educationAdminHandler, request({
     method: "POST",
-    url: "/api/admin/content?action=courses",
+    url: "/api/admin/education?action=courses",
     query: { action: "courses" },
     cookie: adminCookie,
     body: {
@@ -107,9 +102,9 @@ test("education API supports link-based course CRUD and temporary public access"
   const clientCookie = catalog.getHeader("set-cookie").split(";")[0];
   assert.match(clientCookie, /sloy198_education_user=/);
 
-  const updatedCourse = await call(contentHandler, request({
+  const updatedCourse = await call(educationAdminHandler, request({
     method: "PATCH",
-    url: `/api/admin/content?action=course&id=${course.id}`,
+    url: `/api/admin/education?action=course&id=${course.id}`,
     query: { action: "course", id: course.id },
     cookie: adminCookie,
     body: {
@@ -122,26 +117,26 @@ test("education API supports link-based course CRUD and temporary public access"
   assert.equal(updatedCourse.json().course.videoUrl, "https://vimeo.com/76979871");
   assert.equal(updatedCourse.json().course.status, "draft");
 
-  const adminCatalog = await call(contentHandler, request({
+  const adminCatalog = await call(educationAdminHandler, request({
     method: "GET",
-    url: "/api/admin/content?action=courses",
+    url: "/api/admin/education?action=courses",
     query: { action: "courses" },
     cookie: adminCookie
   }));
   assert.equal(adminCatalog.json().courses[0].fullDescription, "Полное описание");
 
-  const invalidVideo = await call(contentHandler, request({
+  const invalidVideo = await call(educationAdminHandler, request({
     method: "PATCH",
-    url: `/api/admin/content?action=course&id=${course.id}`,
+    url: `/api/admin/education?action=course&id=${course.id}`,
     query: { action: "course", id: course.id },
     cookie: adminCookie,
     body: { videoUrl: "https://example.com/video" }
   }));
   assert.equal(invalidVideo.statusCode, 400);
 
-  const deletedCourse = await call(contentHandler, request({
+  const deletedCourse = await call(educationAdminHandler, request({
     method: "DELETE",
-    url: `/api/admin/content?action=course&id=${course.id}`,
+    url: `/api/admin/education?action=course&id=${course.id}`,
     query: { action: "course", id: course.id },
     cookie: adminCookie
   }));

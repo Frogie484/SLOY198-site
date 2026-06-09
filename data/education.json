@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "storage": {
+    "revision": 0,
+    "updatedAt": "",
+    "mutationId": "",
+    "appliedMutationIds": []
+  },
+  "courses": [],
+  "users": [],
+  "purchases": []
+}

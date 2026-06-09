@@ -6,7 +6,7 @@ import {
   readJsonBody,
   sendJson
 } from "../../server/vercel/http.js";
-import { getScheduleStore } from "../../server/vercel/store.js";
+import { getEducationStore } from "../../server/vercel/education-store.js";
 
 export default createApiHandler(["POST"], async (request, response) => {
   if (!isPublicTestAccessEnabled()) {
@@ -14,8 +14,8 @@ export default createApiHandler(["POST"], async (request, response) => {
   }
   const identity = ensureEducationIdentity(request);
   const body = await readJsonBody(request);
-  const store = await getScheduleStore();
-  await store.ensureEducationUser(identity.user.id);
+  const store = await getEducationStore();
+  await store.ensureUser(identity.user.id);
   const purchase = await store.grantCourseAccess(
     identity.user.id,
     String(body.courseId || "").trim(),

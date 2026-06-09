@@ -6,6 +6,7 @@ import {
   ensureBlobConfigured,
   getBlobCommandOptions
 } from "./server/vercel/blob-schedule-adapter.js";
+import { BlobEducationAdapter } from "./server/vercel/blob-education-adapter.js";
 
 const blobEnvironment = [
   "BLOB_STORE_ID",
@@ -318,6 +319,47 @@ test("persistent ETag conflicts return 409 and log the diagnostic cause", async 
   });
 });
 
+test("education storage uses its own Blob and never reports a schedule conflict", async () => {
+  await withBlobEnvironment({ BLOB_STORE_ID: "store_test_oidc" }, async () => {
+    const database = {
+      version: 1,
+      storage: {
+        revision: 2,
+        updatedAt: "before",
+        mutationId: "other",
+        appliedMutationIds: []
+      },
+      courses: []
+    };
+    const paths = [];
+    const adapter = new BlobEducationAdapter({
+      async get(pathname) {
+        paths.push(pathname);
+        return createBlobResult(database, '"etag-2"', pathname);
+      },
+      async put(pathname) {
+        paths.push(pathname);
+        throw new BlobPreconditionFailedError();
+      }
+    }, {
+      logger: createLogger([]),
+      sleep: async () => {},
+      maxMutationAttempts: 1
+    });
+
+    await assert.rejects(
+      adapter.mutate((draft) => {
+        draft.courses.push({ id: "course-1" });
+      }, () => structuredClone(database)),
+      (error) =>
+        error.statusCode === 409 &&
+        /Данные обучения изменились/.test(error.message) &&
+        !/Расписание/.test(error.message)
+    );
+    assert.ok(paths.every((pathname) => pathname === "sloy198/private/education.json"));
+  });
+});
+
 const createDatabase = (overrides = {}) => ({
   version: 3,
   storage: {
@@ -336,13 +378,17 @@ const createDatabase = (overrides = {}) => ({
   ...overrides
 });
 
-const createBlobResult = (database, etag) => ({
+const createBlobResult = (
+  database,
+  etag,
+  pathname = "sloy198/private/schedule.json"
+) => ({
   statusCode: 200,
   stream: new Blob([JSON.stringify(database)]).stream(),
   headers: new Headers(),
   blob: {
     etag,
-    pathname: "sloy198/private/schedule.json"
+    pathname
   }
 });
 

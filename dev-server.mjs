@@ -5,6 +5,7 @@ import { randomUUID, timingSafeEqual } from "node:crypto";
 import { networkInterfaces } from "node:os";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { ScheduleStore } from "./schedule-store.mjs";
+import { EducationStore } from "./education-store.mjs";
 import {
   createPrivateVideoPlayback,
   deletePrivateVideos
@@ -30,6 +31,7 @@ const requestedPort = Number(getArg("--port", "5173"));
 let activePort = requestedPort;
 const root = resolve(".");
 const store = new ScheduleStore(join(root, "data", "schedule.json"));
+const educationStore = new EducationStore(join(root, "data", "education.json"));
 const sessions = new Map();
 const sessionLifetime = 8 * 60 * 60 * 1000;
 const adminLogin = process.env.ADMIN_LOGIN || "admin";
@@ -190,11 +192,9 @@ const handleApiRequest = async (request, response, pathname) => {
 
   if (request.method === "GET" && pathname === "/api/education/catalog") {
     const identity = ensureEducationIdentity(request);
-    await store.ensureEducationUser(identity.user.id);
     sendJson(response, 200, {
       userId: identity.user.id,
-      courses: await store.listEducationCatalog(identity.user.id),
-      testAccessEnabled: isPublicTestAccessEnabled()
+      courses: await educationStore.listCatalog()
     }, identity.cookie ? { "Set-Cookie": identity.cookie } : {});
     return true;
   }
@@ -206,8 +206,8 @@ const handleApiRequest = async (request, response, pathname) => {
     }
     const identity = ensureEducationIdentity(request);
     const body = await readJsonBody(request);
-    await store.ensureEducationUser(identity.user.id);
-    const purchase = await store.grantCourseAccess(
+    await educationStore.ensureUser(identity.user.id);
+    const purchase = await educationStore.grantCourseAccess(
       identity.user.id,
       String(body.courseId || "").trim(),
       "test"
@@ -305,29 +305,29 @@ const handleApiRequest = async (request, response, pathname) => {
   if (
     request.method === "GET" &&
     (pathname === "/api/admin/courses" ||
-      (pathname === "/api/admin/content" && adminAction === "courses"))
+      (pathname === "/api/admin/education" && adminAction === "courses"))
   ) {
-    sendJson(response, 200, { courses: await store.listAdminCourses() });
+    sendJson(response, 200, { courses: await educationStore.listAdminCourses() });
     return true;
   }
 
   if (
     request.method === "POST" &&
     (pathname === "/api/admin/courses" ||
-      (pathname === "/api/admin/content" && adminAction === "courses"))
+      (pathname === "/api/admin/education" && adminAction === "courses"))
   ) {
-    const course = await store.createCourse(validateCourse(await readJsonBody(request)));
+    const course = await educationStore.createCourse(validateCourse(await readJsonBody(request)));
     sendJson(response, 201, { course });
     return true;
   }
 
   const courseMatch =
     pathname.match(/^\/api\/admin\/courses\/([^/]+)$/) ||
-    (pathname === "/api/admin/content" && adminAction === "course"
+    (pathname === "/api/admin/education" && adminAction === "course"
       ? [pathname, requestUrl.searchParams.get("id")]
       : null);
   if (request.method === "PATCH" && courseMatch) {
-    const course = await store.updateCourse(
+    const course = await educationStore.updateCourse(
       courseMatch[1],
       validateCourse(await readJsonBody(request), true)
     );
@@ -335,9 +335,7 @@ const handleApiRequest = async (request, response, pathname) => {
     return true;
   }
   if (request.method === "DELETE" && courseMatch) {
-    const deleted = await store.deleteCourse(courseMatch[1]);
-    await deletePrivateVideos(deleted.videoPaths);
-    sendJson(response, 200, deleted);
+    sendJson(response, 200, await educationStore.deleteCourse(courseMatch[1]));
     return true;
   }
 
@@ -400,7 +398,11 @@ const handleApiRequest = async (request, response, pathname) => {
       return true;
     }
     sendJson(response, 200, {
-      purchase: await store.grantCourseAccess(userId, courseId, "admin-test")
+      purchase: await educationStore.grantCourseAccess(
+        userId,
+        courseId,
+        "admin-test"
+      )
     });
     return true;
   }
@@ -503,4 +505,5 @@ server.on("listening", () => {
 });
 
 await store.init();
+await educationStore.init();
 server.listen(activePort, host);

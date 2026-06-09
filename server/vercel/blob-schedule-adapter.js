@@ -16,13 +16,23 @@ export class BlobScheduleAdapter {
     {
       logger = console,
       sleep = delay,
-      maxMutationAttempts = MAX_MUTATION_ATTEMPTS
+      maxMutationAttempts = MAX_MUTATION_ATTEMPTS,
+      pathname = BLOB_PATHNAME,
+      logLabel = "schedule-store",
+      conflictMessage = "Расписание изменилось одновременно с вашим запросом. Повторите действие.",
+      readErrorMessage = "Не удалось прочитать расписание.",
+      createEmptyDatabase = defaultEmptyDatabase
     } = {}
   ) {
     this.blobClient = blobClient;
     this.logger = logger;
     this.sleep = sleep;
     this.maxMutationAttempts = maxMutationAttempts;
+    this.pathname = pathname;
+    this.logLabel = logLabel;
+    this.conflictMessage = conflictMessage;
+    this.readErrorMessage = readErrorMessage;
+    this.createEmptyDatabase = createEmptyDatabase;
   }
 
   async init() {
@@ -30,13 +40,18 @@ export class BlobScheduleAdapter {
   }
 
   async read() {
-    const snapshot = await readSnapshot(this.blobClient);
+    const snapshot = await readSnapshot(
+      this.blobClient,
+      this.createEmptyDatabase,
+      this.pathname,
+      this.readErrorMessage
+    );
     return snapshot.database;
   }
 
   async write(database) {
     ensureBlobConfigured();
-    await this.blobClient.put(BLOB_PATHNAME, serialize(database), {
+    await this.blobClient.put(this.pathname, serialize(database), {
       access: "private",
       addRandomSuffix: false,
       allowOverwrite: true,
@@ -52,7 +67,12 @@ export class BlobScheduleAdapter {
     let lastConflict = null;
 
     for (let attempt = 0; attempt < this.maxMutationAttempts; attempt += 1) {
-      const snapshot = await readSnapshot(this.blobClient, createEmptyDatabase);
+      const snapshot = await readSnapshot(
+        this.blobClient,
+        createEmptyDatabase,
+        this.pathname,
+        this.readErrorMessage
+      );
       const result = await operation(snapshot.database);
       const previousRevision = getStorageRevision(snapshot.database);
       snapshot.database.storage = {
@@ -67,7 +87,7 @@ export class BlobScheduleAdapter {
       const serializedDatabase = serialize(snapshot.database);
 
       try {
-        await this.blobClient.put(BLOB_PATHNAME, serializedDatabase, {
+        await this.blobClient.put(this.pathname, serializedDatabase, {
           access: "private",
           addRandomSuffix: false,
           allowOverwrite: Boolean(snapshot.etag),
@@ -85,11 +105,13 @@ export class BlobScheduleAdapter {
           this.logger,
           mutationId,
           attempt,
-          error
+          error,
+          this.pathname,
+          this.readErrorMessage
         );
 
         if (hasAppliedMutation(latest?.database, mutationId)) {
-          this.logger.info?.("[schedule-store] write verified after ambiguous Blob response", {
+          this.logger.info?.(`[${this.logLabel}] write verified after ambiguous Blob response`, {
             mutationId,
             attempt: attempt + 1,
             revision: latest.database.storage.revision,
@@ -119,7 +141,7 @@ export class BlobScheduleAdapter {
           };
           const willRetry = attempt + 1 < this.maxMutationAttempts;
           lastConflict.willRetry = willRetry;
-          this.logger.warn?.("[schedule-store] optimistic lock conflict", lastConflict);
+          this.logger.warn?.(`[${this.logLabel}] optimistic lock conflict`, lastConflict);
           if (willRetry) {
             await this.sleep(RETRY_BASE_DELAY_MS * 2 ** attempt);
           }
@@ -130,13 +152,13 @@ export class BlobScheduleAdapter {
       }
     }
 
-    this.logger.error?.("[schedule-store] optimistic lock retries exhausted", lastConflict || {
+    this.logger.error?.(`[${this.logLabel}] optimistic lock retries exhausted`, lastConflict || {
       mutationId,
       attempts: this.maxMutationAttempts,
       reason: "unknown"
     });
     throw createHttpError(
-      "Расписание изменилось одновременно с вашим запросом. Повторите действие.",
+      this.conflictMessage,
       409
     );
   }
@@ -144,10 +166,12 @@ export class BlobScheduleAdapter {
 
 const readSnapshot = async (
   blobClient,
-  createEmptyDatabase = defaultEmptyDatabase
+  createEmptyDatabase = defaultEmptyDatabase,
+  pathname = BLOB_PATHNAME,
+  readErrorMessage = "Не удалось прочитать расписание."
 ) => {
   ensureBlobConfigured();
-  const result = await blobClient.get(BLOB_PATHNAME, {
+  const result = await blobClient.get(pathname, {
     access: "private",
     useCache: false,
     ...getBlobCommandOptions()
@@ -158,7 +182,7 @@ const readSnapshot = async (
   }
 
   if (result.statusCode !== 200 || !result.stream) {
-    throw createHttpError("Не удалось прочитать расписание.", 503);
+    throw createHttpError(readErrorMessage, 503);
   }
 
   const content = await new Response(result.stream).text();
@@ -208,10 +232,12 @@ const readSnapshotAfterWriteError = async (
   logger,
   mutationId,
   attempt,
-  writeError
+  writeError,
+  pathname,
+  readErrorMessage
 ) => {
   try {
-    return await readSnapshot(blobClient, createEmptyDatabase);
+    return await readSnapshot(blobClient, createEmptyDatabase, pathname, readErrorMessage);
   } catch (readError) {
     logger.error?.("[schedule-store] failed to inspect Blob after write error", {
       mutationId,

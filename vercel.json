@@ -37,15 +37,15 @@
     },
     {
       "source": "/api/admin/courses",
-      "destination": "/api/admin/content?action=courses"
+      "destination": "/api/admin/education?action=courses"
     },
     {
       "source": "/api/admin/courses/:id",
-      "destination": "/api/admin/content?action=course&id=:id"
+      "destination": "/api/admin/education?action=course&id=:id"
     },
     {
       "source": "/api/admin/course",
-      "destination": "/api/admin/content?action=course"
+      "destination": "/api/admin/education?action=course"
     },
     {
       "source": "/api/admin/lessons",

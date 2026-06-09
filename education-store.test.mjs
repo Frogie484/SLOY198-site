@@ -1,18 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { ScheduleStore } from "./schedule-store.mjs";
+import { EducationStore } from "./education-store.mjs";
 
 class MemoryAdapter {
-  constructor() {
-    this.database = {
-      version: 3,
-      slots: [],
-      bookings: [],
-      users: [],
-      purchases: [],
-      courses: [],
-      lessons: []
-    };
+  constructor(database) {
+    this.database = database;
   }
 
   async init() {}
@@ -26,14 +19,17 @@ class MemoryAdapter {
   }
 }
 
-const createStore = async () => {
-  const store = new ScheduleStore(new MemoryAdapter());
+const createEducationStore = async () => {
+  const store = new EducationStore(new MemoryAdapter({
+    version: 1,
+    courses: []
+  }));
   await store.init();
   return store;
 };
 
 test("education catalog exposes published link-based courses with temporary access", async () => {
-  const store = await createStore();
+  const store = await createEducationStore();
   await store.createCourse({
     title: "Черновик",
     shortDescription: "",
@@ -50,7 +46,7 @@ test("education catalog exposes published link-based courses with temporary acce
     status: "published"
   });
 
-  const catalog = await store.listEducationCatalog("user-1");
+  const catalog = await store.listCatalog();
   assert.equal(catalog.length, 1);
   assert.equal(catalog[0].id, course.id);
   assert.equal(catalog[0].hasAccess, true);
@@ -61,7 +57,16 @@ test("education catalog exposes published link-based courses with temporary acce
 });
 
 test("paid purchase grants lesson access while lesson order remains editable", async () => {
-  const store = await createStore();
+  const store = new ScheduleStore(new MemoryAdapter({
+    version: 3,
+    slots: [],
+    bookings: [],
+    users: [],
+    purchases: [],
+    courses: [],
+    lessons: []
+  }));
+  await store.init();
   const course = await store.createCourse({
     title: "Практика",
     status: "published",

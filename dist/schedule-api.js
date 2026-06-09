@@ -101,11 +101,11 @@ class ScheduleApi {
   }
 
   getAdminCourses() {
-    return this.request("/api/admin/content?action=courses");
+    return this.request("/api/admin/education?action=courses");
   }
 
   createCourse(payload) {
-    return this.request("/api/admin/content?action=courses", {
+    return this.request("/api/admin/education?action=courses", {
       method: "POST",
       body: JSON.stringify(payload)
     });
@@ -113,7 +113,7 @@ class ScheduleApi {
 
   updateCourse(courseId, payload) {
     return this.request(
-      `/api/admin/content?action=course&id=${encodeURIComponent(courseId)}`,
+      `/api/admin/education?action=course&id=${encodeURIComponent(courseId)}`,
       {
       method: "PATCH",
       body: JSON.stringify(payload)
@@ -123,7 +123,7 @@ class ScheduleApi {
 
   deleteCourse(courseId) {
     return this.request(
-      `/api/admin/content?action=course&id=${encodeURIComponent(courseId)}`,
+      `/api/admin/education?action=course&id=${encodeURIComponent(courseId)}`,
       {
       method: "DELETE"
       }
