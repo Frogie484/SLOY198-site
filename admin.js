@@ -1,4 +1,4 @@
-const api = window.SLOY198ScheduleApi;
+const api = window.SLOI198ScheduleApi;
 const loginSection = document.querySelector("[data-admin-login]");
 const dashboard = document.querySelector("[data-admin-dashboard]");
 const loginForm = document.querySelector("[data-login-form]");

@@ -168,4 +168,4 @@ class ScheduleApi {
   }
 }
 
-window.SLOY198ScheduleApi = new ScheduleApi();
+window.SLOI198ScheduleApi = new ScheduleApi();

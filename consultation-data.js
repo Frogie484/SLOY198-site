@@ -9,9 +9,9 @@
  *   details: ["Дополнительный вывод", "Следующий вывод"]
  * }
  */
-window.SLOY198_CONSULTATION_RESULTS = [];
+window.SLOI198_CONSULTATION_RESULTS = [];
 
-window.SLOY198_CONSULTATION_FALLBACK = {
+window.SLOI198_CONSULTATION_FALLBACK = {
   eyebrow: "Предварительный результат",
   title: "Ваш запрос принят",
   summary: "Персональные сценарии находятся в подготовке. Интерфейс результата уже готов и автоматически покажет подходящий разбор после наполнения базы.",

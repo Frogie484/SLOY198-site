@@ -1,4 +1,4 @@
-const educationApi = window.SLOY198ScheduleApi;
+const educationApi = window.SLOI198ScheduleApi;
 const catalogElement = document.querySelector("[data-course-catalog]");
 
 const formatPrice = (price) =>

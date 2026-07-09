@@ -130,8 +130,8 @@ document.addEventListener("keydown", (event) => {
 const getConsultationResult = (formData) => {
   const [year, month, day] = formData.birthDate.split("-").map(Number);
   const context = { ...formData, day, month, year };
-  const scenarios = Array.isArray(window.SLOY198_CONSULTATION_RESULTS)
-    ? window.SLOY198_CONSULTATION_RESULTS
+  const scenarios = Array.isArray(window.SLOI198_CONSULTATION_RESULTS)
+    ? window.SLOI198_CONSULTATION_RESULTS
     : [];
 
   return scenarios.find((scenario) => {
@@ -140,7 +140,7 @@ const getConsultationResult = (formData) => {
     } catch {
       return false;
     }
-  }) || window.SLOY198_CONSULTATION_FALLBACK || {
+  }) || window.SLOI198_CONSULTATION_FALLBACK || {
     eyebrow: "Предварительный результат",
     title: "Ваш запрос принят",
     summary: "Персональный сценарий будет доступен после наполнения базы результатов.",

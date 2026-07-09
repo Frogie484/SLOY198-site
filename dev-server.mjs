@@ -494,7 +494,7 @@ server.on("listening", () => {
     .filter((address) => address?.family === "IPv4" && !address.internal)
     .map((address) => `http://${address.address}:${activePort}`);
 
-  console.log(`\nSLOY198 dev server`);
+  console.log(`\nSLOI198 dev server`);
   console.log(`Local:   ${localUrl}`);
   lanAddresses.forEach((address) => console.log(`Network: ${address}`));
   console.log(`Admin:   ${localUrl}/admin`);

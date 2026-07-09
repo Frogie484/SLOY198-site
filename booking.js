@@ -1,4 +1,4 @@
-const bookingApi = window.SLOY198ScheduleApi;
+const bookingApi = window.SLOI198ScheduleApi;
 const bookingSlotsContainer = document.querySelector("[data-booking-slots]");
 const bookingForm = document.querySelector("[data-booking-form]");
 const bookingStatus = document.querySelector("[data-booking-status]");

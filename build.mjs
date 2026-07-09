@@ -47,4 +47,4 @@ for (const file of sourceFiles) {
 
 await cp(new URL("assets/", root), new URL("assets/", output), { recursive: true });
 
-console.log(`SLOY198: собрано ${htmlFiles.length} HTML-страниц в ${fileURLToPath(output)}`);
+console.log(`SLOI198: собрано ${htmlFiles.length} HTML-страниц в ${fileURLToPath(output)}`);
